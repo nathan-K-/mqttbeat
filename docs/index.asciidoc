@@ -1,0 +1,5 @@
+= Mqttbeat Docs
+
+Welcome to the Mqttbeat documentation.
+
+
