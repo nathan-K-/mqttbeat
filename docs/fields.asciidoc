@@ -14,7 +14,7 @@ grouped in the following categories:
 
 * <<exported-fields-beat>>
 * <<exported-fields-cloud>>
-* <<exported-fields-mqttbeat>>
+* <<exported-fields-message>>
 
 --
 [[exported-fields-beat]]
@@ -121,19 +121,20 @@ Name of the project in Google Cloud.
 Region in which this host is running.
 
 
-[[exported-fields-mqttbeat]]
-== mqttbeat Fields
+[[exported-fields-message]]
+== Mqtt message Fields
 
-None
+A message from a mqtt client
+
 
 
 [float]
-=== counter
+=== topic
 
-type: long
+type: keyword
 
 required: True
 
-PLEASE UPDATE DOCUMENTATION
+The topic corresponding to the message, basically an url
 
 

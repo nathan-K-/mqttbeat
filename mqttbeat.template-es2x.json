@@ -45,9 +45,6 @@
             }
           }
         },
-        "counter": {
-          "type": "long"
-        },
         "meta": {
           "properties": {
             "cloud": {
@@ -87,6 +84,11 @@
           }
         },
         "tags": {
+          "ignore_above": 1024,
+          "index": "not_analyzed",
+          "type": "string"
+        },
+        "topic": {
           "ignore_above": 1024,
           "index": "not_analyzed",
           "type": "string"

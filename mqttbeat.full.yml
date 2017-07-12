@@ -3,8 +3,12 @@
 ############################# Mqttbeat ######################################
 
 mqttbeat:
-  # Defines how often an event is sent to the output
+  # Defines how often an event is sent to the output (NO LONGER NEEDED SOON)
   period: 1s
+  broker_url: "mqtt://172.22.0.20:1883"
+  decode_payload: true
+  topics_subscribe:
+    - "/test/mqttbeat/#"
 
 #================================ General ======================================
 

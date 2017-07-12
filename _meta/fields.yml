@@ -1,9 +1,20 @@
-- key: mqttbeat
-  title: mqttbeat
-  description:
+- key: message
+  title: "Mqtt message"
+  description: >
+    A message from a mqtt client
   fields:
-    - name: counter
-      type: long
+    - name: topic
+      type: keyword
       required: true
       description: >
-        PLEASE UPDATE DOCUMENTATION
+        The topic corresponding to the message, basically an url
+    #- name: payload
+    #  type: keyword # ??
+    #  required: false
+    #  description: >
+    #    Payload of the message, if it was decoded in a string
+    #- name: payload
+    #  type: integer # ??
+    #  required: false
+    #  description: >
+    #    Payload of the message, if it hasn,t be decoded
