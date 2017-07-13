@@ -59,35 +59,23 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 
 func decodePayload(payload []byte) common.MapStr {
 	event := make(common.MapStr)
-	sent := false
 
+	// A msgpack payload must be a json-like object
 	err := msgpack.Unmarshal(payload, &event)
 	if  err == nil {
-		err = json.Unmarshal(payload, &event)
-		if err == nil {
-			sent = true
-			logp.Info("Payload decoded - msgpack + json")
-			return event
-		} else {
-			sent = true
-			logp.Info("Payload decoded - msgpack")
-			return event
-		}
-	}
-
-	err = json.Unmarshal(payload, &event)
-	if  sent == false && err == nil {
-		sent = true
-		logp.Info("Payload decoded - json)")
+		logp.Info("Payload decoded - msgpack")
 		return event
 	}
 
-	if sent == false {
-		sent = true
-		event["payload"]= string(payload)
-		logp.Info("Payload decoded - text")
-		//TODO handle case bytes ... ? (string fail)
+	err = json.Unmarshal(payload, &event)
+	if  err == nil {
+		logp.Info("Payload decoded - json")
+		return event
 	}
+
+	// default case
+	event["payload"]= string(payload)
+	logp.Info("Payload decoded - text")
 	return event
 }
 
@@ -98,32 +86,32 @@ func (bt *Mqttbeat) on_message(client MQTT.Client, msg MQTT.Message) {
 	event := make(common.MapStr)
 	if bt.beat_config.Decode_paylod == true {
 		event = decodePayload(msg.Payload())
-	} else {
-		event = make(common.MapStr)
-		event["payload"] = msg.Payload()
+		} else {
+			event = make(common.MapStr)
+			event["payload"] = msg.Payload()
+		}
+
+		event["beat"]= common.MapStr{"index": "mymqtt", "type":"message"}
+		event["@timestamp"] = common.Time(time.Now())
+		event["topic"] = msg.Topic()
+		bt.elastic_client.PublishEvent(event)
+		logp.Info("Event sent")
 	}
 
-	event["beat"]= common.MapStr{"index": "mymqtt", "type":"message"}
-	event["@timestamp"] = common.Time(time.Now())
-	event["topic"] = msg.Topic()
-	bt.elastic_client.PublishEvent(event)
-	logp.Info("Event sent")
-}
 
+	func (bt *Mqttbeat) Run(b *beat.Beat) error {
+		logp.Info("mqttbeat is running! Hit CTRL-C to stop it.")
+		bt.elastic_client = b.Publisher.Connect()
 
-func (bt *Mqttbeat) Run(b *beat.Beat) error {
-	logp.Info("mqttbeat is running! Hit CTRL-C to stop it.")
-	bt.elastic_client = b.Publisher.Connect()
-
-	for {
-		select {
-		case <-bt.done:
-			return nil
+		for {
+			select {
+			case <-bt.done:
+				return nil
+			}
 		}
 	}
-}
 
-func (bt *Mqttbeat) Stop() {
-	bt.elastic_client.Close()
-	close(bt.done)
-}
+	func (bt *Mqttbeat) Stop() {
+		bt.elastic_client.Close()
+		close(bt.done)
+	}

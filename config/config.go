@@ -14,7 +14,7 @@ type Config struct {
 
 var DefaultConfig = Config{
 	Period: 1 * time.Second,
-	Broker_url: "tcp://localhost:1883",
+	Broker_url: "tcp://172.22.0.2:1883",
 	Topics_subscribe: map[string]byte{"/test/mqttbeat/#":1},
 	Decode_paylod: true,
 }
