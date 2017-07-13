@@ -30,6 +30,9 @@ class Test(BaseTest):
                      os.getenv("TESTING_ENVIRONMENT") == "2x",
                      "integration test not available on 2.x")
     def test_modules(self):
+        """
+        Tests all filebeat modules
+        """
         self.init()
         modules = os.getenv("TESTING_FILEBEAT_MODULES")
         if modules:
@@ -40,7 +43,7 @@ class Test(BaseTest):
         # generate a minimal configuration
         cfgfile = os.path.join(self.working_dir, "filebeat.yml")
         self.render_config_template(
-            template="filebeat_modules.yml.j2",
+            template_name="filebeat_modules",
             output=cfgfile,
             index_name=self.index_name,
             elasticsearch_url=self.elasticsearch_url)
@@ -68,6 +71,7 @@ class Test(BaseTest):
             self.es.indices.delete(index=self.index_name)
         except:
             pass
+        self.wait_until(lambda: not self.es.indices.exists(self.index_name))
 
         cmd = [
             self.filebeat, "-systemTest",
@@ -80,7 +84,12 @@ class Test(BaseTest):
                 module=module, fileset=fileset, test_file=test_file),
             "-M", "*.*.prospector.close_eof=true",
         ]
-        output = open(os.path.join(self.working_dir, "output.log"), "ab")
+
+        output_path = os.path.join(self.working_dir, module, fileset, os.path.basename(test_file))
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+
+        output = open(os.path.join(output_path, "output.log"), "ab")
         output.write(" ".join(cmd) + "\n")
         subprocess.Popen(cmd,
                          stdin=None,
@@ -100,9 +109,7 @@ class Test(BaseTest):
             assert obj["fileset"]["module"] == module, "expected fileset.module={} but got {}".format(
                 module, obj["fileset"]["module"])
 
-            if not (module == "mysql" and fileset == "slowlog"):
-                # TODO: There are errors parsing the test logs from these modules.
-                assert "error" not in obj, "not error expected but got: {}".format(obj)
+            assert "error" not in obj, "not error expected but got: {}".format(obj)
 
             if module != "auditd" and fileset != "log":
                 # There are dynamic fields in audit logs that are not documented.
@@ -183,3 +190,39 @@ class Test(BaseTest):
         assert len(objects) == 1
         o = objects[0]
         assert o["x-pipeline"] == "test-pipeline"
+
+    @unittest.skipIf(not INTEGRATION_TESTS or
+                     os.getenv("TESTING_ENVIRONMENT") == "2x",
+                     "integration test not available on 2.x")
+    def test_setup_machine_learning_nginx(self):
+        """
+        Tests that setup works and loads nginx dashboards.
+        """
+        self.init()
+        # generate a minimal configuration
+        cfgfile = os.path.join(self.working_dir, "filebeat.yml")
+        self.render_config_template(
+            template_name="filebeat_modules",
+            output=cfgfile,
+            index_name=self.index_name,
+            elasticsearch_url=self.elasticsearch_url)
+
+        cmd = [
+            self.filebeat, "-systemTest",
+            "-e", "-d", "*",
+            "-c", cfgfile,
+            "setup", "--modules=nginx", "--machine-learning"]
+
+        output = open(os.path.join(self.working_dir, "output.log"), "ab")
+        output.write(" ".join(cmd) + "\n")
+        subprocess.Popen(cmd,
+                         stdin=None,
+                         stdout=output,
+                         stderr=subprocess.STDOUT,
+                         bufsize=0).wait()
+
+        jobs = self.es.transport.perform_request("GET", "/_xpack/ml/anomaly_detectors/")
+        assert "filebeat-nginx-access-response_code" in (job["job_id"] for job in jobs["jobs"])
+
+        datafeeds = self.es.transport.perform_request("GET", "/_xpack/ml/datafeeds/")
+        assert "filebeat-nginx-access-response_code" in (df["job_id"] for df in datafeeds["datafeeds"])

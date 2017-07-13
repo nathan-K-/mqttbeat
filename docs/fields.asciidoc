@@ -14,6 +14,8 @@ grouped in the following categories:
 
 * <<exported-fields-beat>>
 * <<exported-fields-cloud>>
+* <<exported-fields-docker-processor>>
+* <<exported-fields-kubernetes-processor>>
 * <<exported-fields-message>>
 
 --
@@ -34,6 +36,12 @@ The name of the Beat sending the log messages. If the Beat name is set in the co
 === beat.hostname
 
 The hostname as returned by the operating system on which the Beat is running.
+
+
+[float]
+=== beat.timezone
+
+The timezone as returned by the operating system on which the Beat is running.
 
 
 [float]
@@ -65,9 +73,40 @@ Arbitrary tags that can be set per Beat and per transaction type.
 [float]
 === fields
 
-type: dict
+type: object
 
 Contains user configurable fields.
+
+
+[float]
+== error Fields
+
+Error fields containing additional info in case of errors.
+
+
+
+[float]
+=== error.message
+
+type: text
+
+Error message.
+
+
+[float]
+=== error.code
+
+type: long
+
+Error code.
+
+
+[float]
+=== error.type
+
+type: keyword
+
+Error type.
 
 
 [[exported-fields-cloud]]
@@ -89,6 +128,12 @@ Name of the cloud provider. Possible values are ec2, gce, or digitalocean.
 === meta.cloud.instance_id
 
 Instance ID of the host machine.
+
+
+[float]
+=== meta.cloud.instance_name
+
+Instance name of the host machine.
 
 
 [float]
@@ -119,6 +164,104 @@ Name of the project in Google Cloud.
 === meta.cloud.region
 
 Region in which this host is running.
+
+
+[[exported-fields-docker-processor]]
+== docker Fields
+
+beta[]
+Docker stats collected from Docker.
+
+
+
+
+[float]
+=== docker.container.id
+
+type: keyword
+
+Unique container id.
+
+
+[float]
+=== docker.container.image
+
+type: keyword
+
+Name of the image the container was built on.
+
+
+[float]
+=== docker.container.name
+
+type: keyword
+
+Container name.
+
+
+[float]
+=== docker.container.labels
+
+type: object
+
+Image labels.
+
+
+[[exported-fields-kubernetes-processor]]
+== kubernetes Fields
+
+beta[]
+Kubernetes metadata added by the kubernetes processor
+
+
+
+
+[float]
+=== kubernetes.pod.name
+
+type: keyword
+
+Kubernetes pod name
+
+
+[float]
+=== kubernetes.namespace
+
+type: keyword
+
+Kubernetes namespace
+
+
+[float]
+=== kubernetes.labels
+
+type: object
+
+Kubernetes labels map
+
+
+[float]
+=== kubernetes.annotations
+
+type: object
+
+Kubernetes annotations map
+
+
+[float]
+=== kubernetes.container.name
+
+type: keyword
+
+Kubernetes container name
+
+
+[float]
+=== kubernetes.container.image
+
+type: keyword
+
+Kubernetes container image
 
 
 [[exported-fields-message]]

@@ -1,0 +1,271 @@
+hash: 9b24f345ca40ef88e0368b67f8f6f088b9719a97dd2f9a0ced7791570067e58b
+updated: 2017-07-13T16:24:24.665599813+02:00
+imports:
+- name: github.com/davecgh/go-spew
+  version: adab96458c51a58dc1783b3335dcce5461522e75
+  subpackages:
+  - spew
+- name: github.com/docker/distribution
+  version: f86db6b22663a27ba4d278220b7e34be528b1e79
+  subpackages:
+  - digestset
+  - reference
+- name: github.com/docker/docker
+  version: 53a75ee05072cf5e59e9fb5b9e5cc5fb91fdb5be
+  subpackages:
+  - api
+  - api/types
+  - api/types/blkiodev
+  - api/types/container
+  - api/types/events
+  - api/types/filters
+  - api/types/image
+  - api/types/mount
+  - api/types/network
+  - api/types/registry
+  - api/types/strslice
+  - api/types/swarm
+  - api/types/swarm/runtime
+  - api/types/time
+  - api/types/versions
+  - api/types/volume
+  - client
+  - pkg/ioutils
+  - pkg/longpath
+  - pkg/mount
+  - pkg/system
+  - pkg/tlsconfig
+- name: github.com/docker/go-connections
+  version: 3ede32e2033de7505e6500d6c868c2b9ed9f169d
+  subpackages:
+  - nat
+  - sockets
+  - tlsconfig
+- name: github.com/docker/go-units
+  version: 0dadbb0345b35ec7ef35e228dabb8de89a65bf52
+- name: github.com/docker/libtrust
+  version: aabc10ec26b754e797f9028f4589c5b7bd90dc20
+- name: github.com/eapache/go-resiliency
+  version: b1fe83b5b03f624450823b751b662259ffc6af70
+  subpackages:
+  - breaker
+- name: github.com/eapache/go-xerial-snappy
+  version: bb955e01b9346ac19dc29eb16586c90ded99a98c
+- name: github.com/eapache/queue
+  version: 44cc805cf13205b55f69e14bcb69867d1ae92f98
+- name: github.com/eclipse/paho.mqtt.golang
+  version: 45f9b18f4864c81d49c3ed01e5faec9eeb05de31
+  subpackages:
+  - packets
+- name: github.com/elastic/beats
+  version: 573eb67286c4e2b8089741005f7181c2b607e093
+  subpackages:
+  - libbeat/api
+  - libbeat/beat
+  - libbeat/cfgfile
+  - libbeat/common
+  - libbeat/common/atomic
+  - libbeat/common/dtfmt
+  - libbeat/common/file
+  - libbeat/common/fmtstr
+  - libbeat/common/jsontransform
+  - libbeat/common/match
+  - libbeat/common/op
+  - libbeat/common/schema
+  - libbeat/common/schema/mapstriface
+  - libbeat/common/streambuf
+  - libbeat/dashboards
+  - libbeat/logp
+  - libbeat/monitoring
+  - libbeat/monitoring/adapter
+  - libbeat/monitoring/report
+  - libbeat/monitoring/report/elasticsearch
+  - libbeat/outputs
+  - libbeat/outputs/codec
+  - libbeat/outputs/codec/format
+  - libbeat/outputs/codec/json
+  - libbeat/outputs/console
+  - libbeat/outputs/elasticsearch
+  - libbeat/outputs/fileout
+  - libbeat/outputs/kafka
+  - libbeat/outputs/logstash
+  - libbeat/outputs/outil
+  - libbeat/outputs/redis
+  - libbeat/outputs/transport
+  - libbeat/paths
+  - libbeat/plugin
+  - libbeat/processors
+  - libbeat/processors/actions
+  - libbeat/processors/add_cloud_metadata
+  - libbeat/processors/add_docker_metadata
+  - libbeat/processors/add_kubernetes_metadata
+  - libbeat/processors/add_locale
+  - libbeat/publisher
+  - libbeat/publisher/bc/publisher
+  - libbeat/publisher/beat
+  - libbeat/publisher/broker
+  - libbeat/publisher/broker/membroker
+  - libbeat/publisher/includes
+  - libbeat/publisher/pipeline
+  - libbeat/service
+  - libbeat/setup/kibana
+  - libbeat/template
+  - libbeat/testing
+  - libbeat/version
+- name: github.com/elastic/go-lumber
+  version: 616041e345fc33c97bc0eb0fa6b388aa07bca3e1
+  subpackages:
+  - client/v2
+  - protocol/v2
+- name: github.com/elastic/go-ucfg
+  version: ec8488a52542c0c51e42e8ea204dcaff400bc644
+  subpackages:
+  - cfgutil
+  - flag
+  - internal/parse
+  - json
+  - yaml
+- name: github.com/ericchiang/k8s
+  version: 5803ed75e31fc1998b5f781ac08e22ff985c3f8f
+  subpackages:
+  - api/resource
+  - api/unversioned
+  - api/v1
+  - apis/apps/v1alpha1
+  - apis/apps/v1beta1
+  - apis/authentication/v1
+  - apis/authentication/v1beta1
+  - apis/authorization/v1
+  - apis/authorization/v1beta1
+  - apis/autoscaling/v1
+  - apis/autoscaling/v2alpha1
+  - apis/batch/v1
+  - apis/batch/v2alpha1
+  - apis/certificates/v1alpha1
+  - apis/certificates/v1beta1
+  - apis/extensions/v1beta1
+  - apis/imagepolicy/v1alpha1
+  - apis/meta/v1
+  - apis/policy/v1alpha1
+  - apis/policy/v1beta1
+  - apis/rbac/v1alpha1
+  - apis/rbac/v1beta1
+  - apis/settings/v1alpha1
+  - apis/storage/v1
+  - apis/storage/v1beta1
+  - runtime
+  - runtime/schema
+  - util/intstr
+  - watch/versioned
+- name: github.com/fatih/color
+  version: 62e9147c64a1ed519147b62a56a14e83e2be02c1
+- name: github.com/garyburd/redigo
+  version: 9f3a0116c9f72c5a56f958206a43dc881b502c37
+  subpackages:
+  - internal
+  - redis
+- name: github.com/ghodss/yaml
+  version: 0ca9ea5df5451ffdf184b4428c902747c2c11cd7
+- name: github.com/gogo/protobuf
+  version: dda3e8acadcc9affc16faf33fbb229db78399245
+  subpackages:
+  - proto
+- name: github.com/golang/protobuf
+  version: 0a4f71a498b7c4812f64969510bcb4eca251e33a
+  subpackages:
+  - proto
+- name: github.com/golang/snappy
+  version: 553a641470496b2327abcac10b36396bd98e45c9
+- name: github.com/joeshaw/multierror
+  version: 69b34d4ec901851247ae7e77d33909caf9df99ed
+- name: github.com/klauspost/compress
+  version: f3dce52e0576655d55fd69e74b63da96ad1108f3
+  subpackages:
+  - flate
+  - zlib
+- name: github.com/klauspost/cpuid
+  version: 09cded8978dc9e80714c4d85b0322337b0a1e5e0
+- name: github.com/mattn/go-colorable
+  version: 5411d3eea5978e6cdc258b30de592b60df6aba96
+  repo: https://github.com/mattn/go-colorable
+- name: github.com/mattn/go-isatty
+  version: 57fdcb988a5c543893cc61bce354a6e24ab70022
+  repo: https://github.com/mattn/go-isatty
+- name: github.com/Microsoft/go-winio
+  version: c4dc1301f1dc0307acd38e611aa375a64dfe0642
+- name: github.com/mitchellh/hashstructure
+  version: 2bca23e0e452137f789efbc8610126fd8b94f73b
+- name: github.com/opencontainers/go-digest
+  version: 279bed98673dd5bef374d3b6e4b09e2af76183bf
+- name: github.com/opencontainers/image-spec
+  version: b8fec85fd4e360fc136fc5f137a5ea02872d117a
+  subpackages:
+  - specs-go
+  - specs-go/v1
+- name: github.com/pierrec/lz4
+  version: 5a3d2245f97fc249850e7802e3c01fad02a1c316
+- name: github.com/pierrec/xxHash
+  version: 5a004441f897722c627870a981d02b29924215fa
+  subpackages:
+  - xxHash32
+- name: github.com/pkg/errors
+  version: c605e284fe17294bda444b34710735b29d1a9d90
+- name: github.com/rcrowley/go-metrics
+  version: 1f30fe9094a513ce4c700b9a54458bbb0c96996c
+- name: github.com/satori/go.uuid
+  version: 5bf94b69c6b68ee1b541973bb8e1144db23a194b
+- name: github.com/Shopify/sarama
+  version: 2fd980e23bdcbb8edeb78fc704de0c39a6567ffc
+- name: github.com/Sirupsen/logrus
+  version: 51dc0fc64317a2861273909081f9c315786533eb
+- name: github.com/urso/go-structform
+  version: fc6abfdbae53e185870094bc210b42a0f65f6176
+  subpackages:
+  - gotype
+  - internal/unsafe
+  - json
+- name: github.com/vmihailenco/msgpack
+  version: d91c9f43689d8565046de42f51a19bb80ebb8360
+  subpackages:
+  - codes
+- name: golang.org/x/net
+  version: f01ecb60fe3835d80d9a0b7b2bf24b228c89260e
+  subpackages:
+  - context
+  - context/ctxhttp
+  - http2
+  - http2/hpack
+  - idna
+  - lex/httplex
+  - proxy
+  - websocket
+- name: golang.org/x/sys
+  version: e24f485414aeafb646f6fca458b0bf869c0880a1
+  subpackages:
+  - unix
+  - windows
+  - windows/svc
+  - windows/svc/debug
+- name: golang.org/x/text
+  version: cfdf022e86b4ecfb646e1efbd7db175dd623a8fa
+  subpackages:
+  - secure/bidirule
+  - transform
+  - unicode/bidi
+  - unicode/norm
+- name: google.golang.org/appengine
+  version: ad2570cd3913654e00c5f0183b39d2f998e54046
+  subpackages:
+  - datastore
+  - internal
+  - internal/app_identity
+  - internal/base
+  - internal/datastore
+  - internal/log
+  - internal/modules
+  - internal/remote_api
+- name: gopkg.in/vmihailenco/msgpack.v2
+  version: d91c9f43689d8565046de42f51a19bb80ebb8360
+- name: gopkg.in/yaml.v2
+  version: 1be3d31502d6eabc0dd7ce5b0daab022e14a5538
+testImports: []

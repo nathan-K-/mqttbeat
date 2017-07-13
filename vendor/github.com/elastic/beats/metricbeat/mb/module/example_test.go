@@ -20,7 +20,7 @@ func ExampleWrapper() {
 	// Build a configuration object.
 	config, err := common.NewConfigFrom(map[string]interface{}{
 		"module":     moduleName,
-		"metricsets": []string{metricSetName},
+		"metricsets": []string{eventFetcherName},
 	})
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -28,7 +28,7 @@ func ExampleWrapper() {
 	}
 
 	// Create a new Wrapper based on the configuration.
-	m, err := module.NewWrapper(config, mb.Registry)
+	m, err := module.NewWrapper(0, config, mb.Registry)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
@@ -68,16 +68,15 @@ func ExampleWrapper() {
 	//     "Tags": null
 	//   },
 	//   "fake": {
-	//     "status": {
+	//     "eventfetcher": {
 	//       "metric": 1
 	//     }
 	//   },
 	//   "metricset": {
 	//     "module": "fake",
-	//     "name": "status",
+	//     "name": "eventfetcher",
 	//     "rtt": 111
-	//   },
-	//   "type": "metricsets"
+	//   }
 	// }
 }
 
@@ -91,14 +90,14 @@ func ExampleRunner() {
 
 	config, err := common.NewConfigFrom(map[string]interface{}{
 		"module":     moduleName,
-		"metricsets": []string{metricSetName},
+		"metricsets": []string{eventFetcherName},
 	})
 	if err != nil {
 		return
 	}
 
 	// Create a new Wrapper based on the configuration.
-	m, err := module.NewWrapper(config, mb.Registry)
+	m, err := module.NewWrapper(0, config, mb.Registry)
 	if err != nil {
 		return
 	}

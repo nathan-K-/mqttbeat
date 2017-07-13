@@ -20,16 +20,15 @@ in <<configuration-metricbeat>>. Here is an example configuration:
 [source,yaml]
 ----
 metricbeat.modules:
-#- module: jolokia
-#  metricsets: ["jmx"]
-#  enabled: true
-#  period: 10s
-#  hosts: ["localhost"]
-#  namespace: "metrics"
-#  path: "/jolokia/?ignoreErrors=true&canonicalNaming=false"
-#  jmx.mapping:
-#  jmx.application:
-#  jmx.instance:
+- module: jolokia
+  metricsets: ["jmx"]
+  period: 10s
+  hosts: ["localhost"]
+  namespace: "metrics"
+  path: "/jolokia/?ignoreErrors=true&canonicalNaming=false"
+  jmx.mapping:
+  jmx.application:
+  jmx.instance:
 ----
 
 [float]

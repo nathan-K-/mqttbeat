@@ -42,6 +42,40 @@ func (m MapStr) Update(d MapStr) {
 	}
 }
 
+// DeepUpdate recursively copies the key-value pairs from d to this map.
+// If the key is present and a map as well, the sub-map will be updated recursively
+// via DeepUpdate.
+func (m MapStr) DeepUpdate(d MapStr) {
+	for k, v := range d {
+		switch val := v.(type) {
+		case map[string]interface{}:
+			m[k] = deepUpdateValue(m[k], MapStr(val))
+		case MapStr:
+			m[k] = deepUpdateValue(m[k], val)
+		default:
+			m[k] = v
+		}
+	}
+}
+
+func deepUpdateValue(old interface{}, val MapStr) interface{} {
+	if old == nil {
+		return val
+	}
+
+	switch sub := old.(type) {
+	case MapStr:
+		sub.DeepUpdate(val)
+		return sub
+	case map[string]interface{}:
+		tmp := MapStr(sub)
+		tmp.DeepUpdate(val)
+		return tmp
+	default:
+		return val
+	}
+}
+
 // Delete deletes the given key from the map.
 func (m MapStr) Delete(key string) error {
 	_, err := walkMap(key, m, opDelete)
@@ -67,12 +101,10 @@ func (m MapStr) Clone() MapStr {
 	result := MapStr{}
 
 	for k, v := range m {
-		innerMap, err := toMapStr(v)
-		if err == nil {
-			result[k] = innerMap.Clone()
-		} else {
-			result[k] = v
+		if innerMap, ok := tryToMapStr(v); ok {
+			v = innerMap.Clone()
 		}
+		result[k] = v
 	}
 
 	return result
@@ -203,14 +235,21 @@ func AddTags(ms MapStr, tags []string) error {
 // a MapStr or a map[string]interface{}. If it's any other type or nil then
 // an error is returned.
 func toMapStr(v interface{}) (MapStr, error) {
-	switch v.(type) {
-	case MapStr:
-		return v.(MapStr), nil
-	case map[string]interface{}:
-		m := v.(map[string]interface{})
-		return MapStr(m), nil
-	default:
+	m, ok := tryToMapStr(v)
+	if !ok {
 		return nil, errors.Errorf("expected map but type is %T", v)
+	}
+	return m, nil
+}
+
+func tryToMapStr(v interface{}) (MapStr, bool) {
+	switch m := v.(type) {
+	case MapStr:
+		return m, true
+	case map[string]interface{}:
+		return MapStr(m), true
+	default:
+		return nil, false
 	}
 }
 

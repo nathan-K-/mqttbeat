@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/elastic/beats/libbeat/common"
-	"github.com/elastic/beats/libbeat/publisher"
+	"github.com/elastic/beats/libbeat/publisher/bc/publisher"
 	pubtest "github.com/elastic/beats/libbeat/publisher/testing"
 	"github.com/elastic/beats/metricbeat/mb"
 	"github.com/elastic/beats/metricbeat/mb/module"
@@ -19,14 +19,14 @@ func TestRunner(t *testing.T) {
 
 	config, err := common.NewConfigFrom(map[string]interface{}{
 		"module":     moduleName,
-		"metricsets": []string{metricSetName},
+		"metricsets": []string{eventFetcherName},
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Create a new Wrapper based on the configuration.
-	m, err := module.NewWrapper(config, mb.Registry)
+	m, err := module.NewWrapper(0, config, mb.Registry)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,6 +1,7 @@
 package beater
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"sync"
@@ -10,6 +11,9 @@ import (
 	"github.com/elastic/beats/libbeat/common"
 	"github.com/elastic/beats/libbeat/common/droppriv"
 	"github.com/elastic/beats/libbeat/logp"
+	"github.com/elastic/beats/libbeat/processors"
+	"github.com/elastic/beats/libbeat/publisher/bc/publisher"
+	pub "github.com/elastic/beats/libbeat/publisher/beat"
 	"github.com/elastic/beats/libbeat/service"
 	"github.com/tsg/gopacket/layers"
 
@@ -29,8 +33,11 @@ import (
 type packetbeat struct {
 	config      config.Config
 	cmdLineArgs flags
-	pub         *publish.PacketbeatPublisher
 	sniff       *sniffer.SnifferSetup
+
+	// publisher/pipeline
+	pipeline publisher.Publisher
+	transPub *publish.TransactionPublisher
 
 	services []interface {
 		Start()
@@ -39,24 +46,22 @@ type packetbeat struct {
 }
 
 type flags struct {
-	file         *string
-	loop         *int
-	oneAtAtime   *bool
-	topSpeed     *bool
-	dumpfile     *string
-	waitShutdown *int
+	file       *string
+	loop       *int
+	oneAtAtime *bool
+	topSpeed   *bool
+	dumpfile   *string
 }
 
 var cmdLineArgs flags
 
 func init() {
 	cmdLineArgs = flags{
-		file:         flag.String("I", "", "Read packet data from specified file"),
-		loop:         flag.Int("l", 1, "Loop file. 0 - loop forever"),
-		oneAtAtime:   flag.Bool("O", false, "Read packets one at a time (press Enter)"),
-		topSpeed:     flag.Bool("t", false, "Read packets as fast as possible, without sleeping"),
-		dumpfile:     flag.String("dump", "", "Write all captured packets to this libpcap file"),
-		waitShutdown: flag.Int("waitstop", 0, "Additional seconds to wait before shutting down"),
+		file:       flag.String("I", "", "Read packet data from specified file"),
+		loop:       flag.Int("l", 1, "Loop file. 0 - loop forever"),
+		oneAtAtime: flag.Bool("O", false, "Read packets one at a time (press Enter)"),
+		topSpeed:   flag.Bool("t", false, "Read packets as fast as possible, without sleeping"),
+		dumpfile:   flag.String("dump", "", "Write all captured packets to this libpcap file"),
 	}
 }
 
@@ -98,16 +103,18 @@ func (pb *packetbeat) init(b *beat.Beat) error {
 		return err
 	}
 
-	// This is required as init Beat is called before the beat publisher is initialised
-	b.Config.Shipper.InitShipperConfig()
-
-	pb.pub, err = publish.NewPublisher(b.Publisher, *b.Config.Shipper.QueueSize, *b.Config.Shipper.BulkQueueSize, pb.config.IgnoreOutgoing)
+	pb.pipeline = b.Publisher
+	pb.transPub, err = publish.NewTransactionPublisher(
+		b.Publisher,
+		pb.config.IgnoreOutgoing,
+		pb.config.Interfaces.File == "",
+	)
 	if err != nil {
-		return fmt.Errorf("Initializing publisher failed: %v", err)
+		return err
 	}
 
 	logp.Debug("main", "Initializing protocol plugins")
-	err = protos.Protos.Init(false, pb.pub, cfg.Protocols)
+	err = protos.Protos.Init(false, pb.transPub, cfg.Protocols, cfg.ProtocolsList)
 	if err != nil {
 		return fmt.Errorf("Initializing protocol analyzers failed: %v", err)
 	}
@@ -128,12 +135,7 @@ func (pb *packetbeat) Run(b *beat.Beat) error {
 			time.Sleep(time.Duration(float64(protos.DefaultTransactionExpiration) * 1.2))
 			logp.Debug("main", "Streams and transactions should all be expired now.")
 		}
-
-		// TODO:
-		// pb.TransPub.Stop()
 	}()
-
-	pb.pub.Start()
 
 	// This needs to be after the sniffer Init but before the sniffer Run.
 	if err := droppriv.DropPrivileges(pb.config.RunOptions); err != nil {
@@ -152,6 +154,9 @@ func (pb *packetbeat) Run(b *beat.Beat) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+
+		defer pb.transPub.Stop()
+
 		err := pb.sniff.Run()
 		if err != nil {
 			errC <- fmt.Errorf("Sniffer main loop failed: %v", err)
@@ -171,9 +176,9 @@ func (pb *packetbeat) Run(b *beat.Beat) error {
 		service.Stop()
 	}
 
-	waitShutdown := pb.cmdLineArgs.waitShutdown
-	if waitShutdown != nil && *waitShutdown > 0 {
-		time.Sleep(time.Duration(*waitShutdown) * time.Second)
+	timeout := pb.config.ShutdownTimeout
+	if timeout > 0 {
+		time.Sleep(timeout)
 	}
 
 	return nil
@@ -183,14 +188,18 @@ func (pb *packetbeat) Run(b *beat.Beat) error {
 func (pb *packetbeat) Stop() {
 	logp.Info("Packetbeat send stop signal")
 	pb.sniff.Stop()
-	pb.pub.Stop()
 }
 
 func (pb *packetbeat) setupSniffer() error {
 	config := &pb.config
 
+	icmp, err := pb.icmpConfig()
+	if err != nil {
+		return err
+	}
+
 	withVlans := config.Interfaces.WithVlans
-	withICMP := config.Protocols["icmp"].Enabled()
+	withICMP := icmp.Enabled()
 
 	filter := config.Interfaces.BpfFilter
 	if filter == "" && !config.Flows.IsEnabled() {
@@ -207,7 +216,20 @@ func (pb *packetbeat) createWorker(dl layers.LinkType) (sniffer.Worker, error) {
 	config := &pb.config
 
 	if config.Flows.IsEnabled() {
-		f, err = flows.NewFlows(pb.pub, config.Flows)
+		processors, err := processors.New(config.Flows.Processors)
+		if err != nil {
+			return nil, err
+		}
+
+		client, err := pb.pipeline.ConnectX(pub.ClientConfig{
+			EventMetadata: config.Flows.EventMetadata,
+			Processor:     processors,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		f, err = flows.NewFlows(client.PublishAll, config.Flows)
 		if err != nil {
 			return nil, err
 		}
@@ -215,8 +237,17 @@ func (pb *packetbeat) createWorker(dl layers.LinkType) (sniffer.Worker, error) {
 
 	var icmp4 icmp.ICMPv4Processor
 	var icmp6 icmp.ICMPv6Processor
-	if cfg := config.Protocols["icmp"]; cfg.Enabled() {
-		icmp, err := icmp.New(false, pb.pub, cfg)
+	cfg, err := pb.icmpConfig()
+	if err != nil {
+		return nil, err
+	}
+	if cfg.Enabled() {
+		reporter, err := pb.transPub.CreateReporter(cfg)
+		if err != nil {
+			return nil, err
+		}
+
+		icmp, err := icmp.New(false, reporter, cfg)
 		if err != nil {
 			return nil, err
 		}
@@ -244,4 +275,33 @@ func (pb *packetbeat) createWorker(dl layers.LinkType) (sniffer.Worker, error) {
 		pb.services = append(pb.services, f)
 	}
 	return worker, nil
+}
+
+func (pb *packetbeat) icmpConfig() (*common.Config, error) {
+	var icmp *common.Config
+	if pb.config.Protocols["icmp"].Enabled() {
+		icmp = pb.config.Protocols["icmp"]
+	}
+
+	for _, cfg := range pb.config.ProtocolsList {
+		info := struct {
+			Type string `config:"type" validate:"required"`
+		}{}
+
+		if err := cfg.Unpack(&info); err != nil {
+			return nil, err
+		}
+
+		if info.Type != "icmp" {
+			continue
+		}
+
+		if icmp != nil {
+			return nil, errors.New("More then one icmp confgigurations found")
+		}
+
+		icmp = cfg
+	}
+
+	return icmp, nil
 }

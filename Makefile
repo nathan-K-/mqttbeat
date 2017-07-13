@@ -46,3 +46,7 @@ before-build:
 # Collects all dependencies and then calls update
 .PHONY: collect
 collect:
+
+.PHONY: update-deps
+update-deps:
+	glide update

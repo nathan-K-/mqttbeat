@@ -1,6 +1,7 @@
 import os
 import argparse
 import yaml
+import six
 
 # Collects docs for all modules
 
@@ -30,7 +31,7 @@ This file is generated! See scripts/docs_collector.py
         module_file = generated_note
         module_file += "[[filebeat-module-" + module + "]]\n"
 
-        with file(module_doc) as f:
+        with open(module_doc) as f:
             module_file += f.read()
 
         beat_path = path + "/" + module + "/_meta"
@@ -59,15 +60,13 @@ For a description of each field in the metricset, see the
 
     module_list_output = generated_note
     module_list_output += "  * <<filebeat-modules-overview>>\n"
-    for m, title in sorted(modules_list.iteritems()):
+    for m, title in sorted(six.iteritems(modules_list)):
         module_list_output += "  * <<filebeat-module-" + m + ">>\n"
-    module_list_output += "  * <<filebeat-modules-devguide>>\n"
 
     module_list_output += "\n\n--\n\n"
     module_list_output += "include::modules-overview.asciidoc[]\n"
-    for m, title in sorted(modules_list.iteritems()):
+    for m, title in sorted(six.iteritems(modules_list)):
         module_list_output += "include::modules/" + m + ".asciidoc[]\n"
-    module_list_output += "include::modules-dev-guide.asciidoc[]\n"
 
     # Write module link list
     with open(os.path.abspath("docs") + "/modules_list.asciidoc", 'w') as f:

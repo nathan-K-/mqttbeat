@@ -45,7 +45,6 @@ func TestEventBuilder(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, defaultType, event["type"])
 	assert.Equal(t, common.Time(startTime), event["@timestamp"])
 
 	metricset := event["metricset"].(common.MapStr)
@@ -65,7 +64,7 @@ func TestEventBuilderError(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, errFetch.Error(), event["error"])
+	assert.Equal(t, errFetch.Error(), event["error"].(common.MapStr)["message"])
 }
 
 func TestEventBuilderNoHost(t *testing.T) {
@@ -77,4 +76,18 @@ func TestEventBuilderNoHost(t *testing.T) {
 
 	_, found := event["metricset-host"]
 	assert.False(t, found)
+}
+
+func TestEventBuildNoRTT(t *testing.T) {
+	b := builder
+	b.FetchDuration = 0
+
+	event, err := b.Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	metricset := event["metricset"].(common.MapStr)
+	_, found := metricset["rtt"]
+	assert.False(t, found, "found rtt")
 }

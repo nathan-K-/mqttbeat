@@ -39,7 +39,7 @@ install:
   - true
 
 script:
-  - glide install
+  - make update-deps
   - make
   - make $TARGETS
 
