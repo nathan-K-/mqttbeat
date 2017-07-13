@@ -49,4 +49,4 @@ collect:
 
 .PHONY: update-deps
 update-deps:
-	glide update
+	glide update --strip-vcs
