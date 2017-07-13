@@ -24,6 +24,7 @@ type Mqttbeat struct {
 	mqtt_client MQTT.Client
 }
 
+// Prepare mqtt client
 func setupMqttClient(bt *Mqttbeat) {
 	mqtt_client_opt := MQTT.NewClientOptions()
 	mqtt_client_opt.AddBroker(bt.beat_config.Broker_url)
@@ -49,6 +50,7 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 	}
 	logp.Info("MQTT Client connected")
 
+	// Mqtt client - Subscribe to every topic in the config file, and bind with message handler
 	if token := bt.mqtt_client.SubscribeMultiple(bt.beat_config.Topics_subscribe, bt.on_message);
 	token.Wait() && token.Error() != nil {
 		panic(token.Error())
@@ -57,7 +59,7 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 	return bt, nil
 }
 
-func decodePayload(payload []byte) common.MapStr {
+func DecodePayload(payload []byte) common.MapStr {
 	event := make(common.MapStr)
 
 	// A msgpack payload must be a json-like object
@@ -79,39 +81,43 @@ func decodePayload(payload []byte) common.MapStr {
 	return event
 }
 
-//define a function for the default message handler
-// see https://discuss.elastic.co/t/how-to-append-a-json-string-to-libbeat-event/34020/2
+// Mqtt message handler
 func (bt *Mqttbeat) on_message(client MQTT.Client, msg MQTT.Message) {
 	logp.Info("MQTT MESSAGE RECEIVED " + string(msg.Payload()))
-	event := make(common.MapStr)
+
+	event := make(common.MapStr) // common.MapStr = map[string]interface{}
+
 	if bt.beat_config.Decode_paylod == true {
-		event = decodePayload(msg.Payload())
-		} else {
-			event = make(common.MapStr)
-			event["payload"] = msg.Payload()
+		event = DecodePayload(msg.Payload())
+	} else {
+		event = make(common.MapStr)
+		event["payload"] = msg.Payload()
+	}
+
+	event["beat"]= common.MapStr{"index": "mqttbeat", "type":"message"}
+	event["@timestamp"] = common.Time(time.Now())
+	event["topic"] = msg.Topic()
+	// Finally sending the message to elasticsearch
+	bt.elastic_client.PublishEvent(event)
+	logp.Info("Event sent")
+	}
+
+
+func (bt *Mqttbeat) Run(b *beat.Beat) error {
+	logp.Info("mqttbeat is running! Hit CTRL-C to stop it.")
+	bt.elastic_client = b.Publisher.Connect()
+
+	// The mqtt client is asynchronous, so here we don't have anuthing to do
+	for {
+		select {
+		case <-bt.done:
+			return nil
 		}
-
-		event["beat"]= common.MapStr{"index": "mymqtt", "type":"message"}
-		event["@timestamp"] = common.Time(time.Now())
-		event["topic"] = msg.Topic()
-		bt.elastic_client.PublishEvent(event)
-		logp.Info("Event sent")
 	}
+}
 
-
-	func (bt *Mqttbeat) Run(b *beat.Beat) error {
-		logp.Info("mqttbeat is running! Hit CTRL-C to stop it.")
-		bt.elastic_client = b.Publisher.Connect()
-
-		for {
-			select {
-			case <-bt.done:
-				return nil
-			}
-		}
-	}
-
-	func (bt *Mqttbeat) Stop() {
-		bt.elastic_client.Close()
-		close(bt.done)
-	}
+func (bt *Mqttbeat) Stop() {
+	bt.mqtt_client.Disconnect(250)
+	bt.elastic_client.Close()
+	close(bt.done)
+}

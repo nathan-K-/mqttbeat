@@ -1,0 +1,11 @@
+package: github.com/nathan-k-/mqttbeat
+import:
+- package: github.com/eclipse/paho.mqtt.golang
+- package: github.com/elastic/beats
+  subpackages:
+  - libbeat/beat
+  - libbeat/common
+  - libbeat/logp
+  - libbeat/publisher
+- package: gopkg.in/vmihailenco/msgpack.v2
+  version: ~3.1.0
