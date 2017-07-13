@@ -19,17 +19,17 @@ import (
 
 type Mqttbeat struct {
 	done   chan struct{}
-	beat_config config.Config
-	elastic_client publisher.Client
-	mqtt_client MQTT.Client
+	beatConfig config.Config
+	elasticClient publisher.Client
+	mqttClient MQTT.Client
 }
 
 // Prepare mqtt client
 func setupMqttClient(bt *Mqttbeat) {
-	mqtt_client_opt := MQTT.NewClientOptions()
-	mqtt_client_opt.AddBroker(bt.beat_config.Broker_url)
+	mqttClientOpt := MQTT.NewClientOptions()
+	mqttClientOpt.AddBroker(bt.beatConfig.BrokerUrl)
 
-	bt.mqtt_client = MQTT.NewClient(mqtt_client_opt)
+	bt.mqttClient = MQTT.NewClient(mqttClientOpt)
 }
 
 // Creates beater
@@ -41,17 +41,17 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 
 	bt := &Mqttbeat{
 		done:   make(chan struct{}),
-		beat_config: config,
+		beatConfig: config,
 	}
 	setupMqttClient(bt)
 
-	if token := bt.mqtt_client.Connect(); token.Wait() && token.Error() != nil {
+	if token := bt.mqttClient.Connect(); token.Wait() && token.Error() != nil {
 		panic(token.Error())
 	}
 	logp.Info("MQTT Client connected")
 
 	// Mqtt client - Subscribe to every topic in the config file, and bind with message handler
-	if token := bt.mqtt_client.SubscribeMultiple(bt.beat_config.Topics_subscribe, bt.on_message);
+	if token := bt.mqttClient.SubscribeMultiple(bt.beatConfig.TopicsSubscribe, bt.onMessage);
 	token.Wait() && token.Error() != nil {
 		panic(token.Error())
 	}
@@ -82,12 +82,12 @@ func DecodePayload(payload []byte) common.MapStr {
 }
 
 // Mqtt message handler
-func (bt *Mqttbeat) on_message(client MQTT.Client, msg MQTT.Message) {
+func (bt *Mqttbeat) onMessage(client MQTT.Client, msg MQTT.Message) {
 	logp.Info("MQTT MESSAGE RECEIVED " + string(msg.Payload()))
 
 	event := make(common.MapStr) // common.MapStr = map[string]interface{}
 
-	if bt.beat_config.Decode_paylod == true {
+	if bt.beatConfig.DecodePaylod == true {
 		event = DecodePayload(msg.Payload())
 	} else {
 		event = make(common.MapStr)
@@ -98,14 +98,14 @@ func (bt *Mqttbeat) on_message(client MQTT.Client, msg MQTT.Message) {
 	event["@timestamp"] = common.Time(time.Now())
 	event["topic"] = msg.Topic()
 	// Finally sending the message to elasticsearch
-	bt.elastic_client.PublishEvent(event)
+	bt.elasticClient.PublishEvent(event)
 	logp.Info("Event sent")
 	}
 
 
 func (bt *Mqttbeat) Run(b *beat.Beat) error {
 	logp.Info("mqttbeat is running! Hit CTRL-C to stop it.")
-	bt.elastic_client = b.Publisher.Connect()
+	bt.elasticClient = b.Publisher.Connect()
 
 	// The mqtt client is asynchronous, so here we don't have anuthing to do
 	for {
@@ -117,7 +117,7 @@ func (bt *Mqttbeat) Run(b *beat.Beat) error {
 }
 
 func (bt *Mqttbeat) Stop() {
-	bt.mqtt_client.Disconnect(250)
-	bt.elastic_client.Close()
+	bt.mqttClient.Disconnect(250)
+	bt.elasticClient.Close()
 	close(bt.done)
 }
