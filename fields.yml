@@ -176,13 +176,3 @@
       required: true
       description: >
         The topic corresponding to the message, basically an url
-    #- name: payload
-    #  type: keyword # ??
-    #  required: false
-    #  description: >
-    #    Payload of the message, if it was decoded in a string
-    #- name: payload
-    #  type: integer # ??
-    #  required: false
-    #  description: >
-    #    Payload of the message, if it hasn,t be decoded
