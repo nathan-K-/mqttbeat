@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 	"encoding/json"
+	"strings"
+	"strconv"
 
 	"github.com/elastic/beats/libbeat/beat"
 	"github.com/elastic/beats/libbeat/common"
@@ -28,6 +30,7 @@ type Mqttbeat struct {
 func setupMqttClient(bt *Mqttbeat) {
 	mqttClientOpt := MQTT.NewClientOptions()
 	mqttClientOpt.AddBroker(bt.beatConfig.BrokerUrl)
+	logp.Info("BROKER url " + bt.beatConfig.BrokerUrl)
 
 	bt.mqttClient = MQTT.NewClient(mqttClientOpt)
 }
@@ -50,8 +53,11 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 	}
 	logp.Info("MQTT Client connected")
 
+	subscriptions := ParseTopics(bt.beatConfig.TopicsSubscribe)
+		//bt.beatConfig.TopicsSubscribe
+
 	// Mqtt client - Subscribe to every topic in the config file, and bind with message handler
-	if token := bt.mqttClient.SubscribeMultiple(bt.beatConfig.TopicsSubscribe, bt.onMessage);
+	if token := bt.mqttClient.SubscribeMultiple(subscriptions, bt.onMessage);
 	token.Wait() && token.Error() != nil {
 		panic(token.Error())
 	}
@@ -59,27 +65,6 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 	return bt, nil
 }
 
-func DecodePayload(payload []byte) common.MapStr {
-	event := make(common.MapStr)
-
-	// A msgpack payload must be a json-like object
-	err := msgpack.Unmarshal(payload, &event)
-	if  err == nil {
-		logp.Info("Payload decoded - msgpack")
-		return event
-	}
-
-	err = json.Unmarshal(payload, &event)
-	if  err == nil {
-		logp.Info("Payload decoded - json")
-		return event
-	}
-
-	// default case
-	event["payload"]= string(payload)
-	logp.Info("Payload decoded - text")
-	return event
-}
 
 // Mqtt message handler
 func (bt *Mqttbeat) onMessage(client MQTT.Client, msg MQTT.Message) {
@@ -120,4 +105,44 @@ func (bt *Mqttbeat) Stop() {
 	bt.mqttClient.Disconnect(250)
 	bt.elasticClient.Close()
 	close(bt.done)
+}
+
+// Helpers
+func DecodePayload(payload []byte) common.MapStr {
+	event := make(common.MapStr)
+
+	// A msgpack payload must be a json-like object
+	err := msgpack.Unmarshal(payload, &event)
+	if  err == nil {
+		logp.Info("Payload decoded - msgpack")
+		return event
+	}
+
+	err = json.Unmarshal(payload, &event)
+	if  err == nil {
+		logp.Info("Payload decoded - json")
+		return event
+	}
+
+	// default case
+	event["payload"]= string(payload)
+	logp.Info("Payload decoded - text")
+	return event
+}
+
+func ParseTopics(topics []string) map[string]byte{
+	subscriptions := make(map[string]byte)
+	for _, value := range topics{
+		// Fist, spliting the string topic?qos
+		topic, qosStr := strings.Split(value, "?")[0], strings.Split(value, "?")[1]
+		// Then, parsing the qos to an int
+		qosInt, err := strconv.ParseInt(qosStr, 10, 0)
+		if err != nil {
+			panic("Error parsing topics")
+		}
+		// Finally, filling the subscriptions map 
+		subscriptions[topic] = byte(qosInt)
+	}
+	fmt.Println(subscriptions)
+	return subscriptions
 }

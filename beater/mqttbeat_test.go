@@ -48,3 +48,14 @@ func TestDecodeText(t *testing.T){
 	}
 }
 
+func TestParseTopic(t *testing.T){
+	input := []string{"some/topic?0", "some/ohter/topic?2", "final/topic?1"}
+
+	reference := map[string]byte{"some/topic": 0, "some/ohter/topic": 2, "final/topic": 1}
+
+	output := ParseTopics(input)
+
+	if !reflect.DeepEqual(reference, output) {
+		t.Error("Not equals")
+	}
+}
