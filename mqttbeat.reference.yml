@@ -4,15 +4,15 @@
 # Specific config
 mqttbeat:
   # Url of the MQTT broker, with protocol and port
-  broker_url: "tcp://localhost:1883"
+  broker_url: "tcp://172.22.0.2:1883"
   # Try to decode the payload ? Support msgpack and json
   decode_payload: true
-  # List of string : int, representing a topic and the associated QoS,
-  # as topic?qos
+  # List of string : int, representing a topic and the associated QoS
   # (between 0 and 2)
   topics_subscribe:
-    - /test/mqttbeat/#?2
-    - /test/sub/#?0
+    - "/test/mqttbeat/#": 1
+    - "/test/sub/#": 1
+
 #================================ General ======================================
 
 # The name of the shipper that publishes the network data. It can be used to group

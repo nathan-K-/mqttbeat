@@ -2,8 +2,6 @@
 
 Welcome to Mqttbeat.
 
-This beat will allow you to put MQTT messages in an elasticsearch instance.
-
 Ensure that this folder is at the following location:
 `${GOPATH}/github.com/nathan-k-/mqttbeat`
 
@@ -11,15 +9,13 @@ Ensure that this folder is at the following location:
 
 ### Requirements
 
-* [Golang](https://golang.org/dl/) 1.7 (1.8 recommended)
+* [Golang](https://golang.org/dl/) 1.7
 
 ### Init Project
 To get running with Mqttbeat and also install the
-dependencies, run the following command, with [glide](https://github.com/Masterminds/glide) installed:
+dependencies, run the following command:
 
 ```
-glide install
-pip install virtualenv (for the testsuite)
 make setup
 ```
 
