@@ -1,4 +1,5 @@
 # Mqttbeat
+[![Build Status](https://travis-ci.org/nathan-K-/mqttbeat.svg?branch=master)](https://travis-ci.org/nathan-K-/mqttbeat)
 
 Welcome to Mqttbeat.
 
