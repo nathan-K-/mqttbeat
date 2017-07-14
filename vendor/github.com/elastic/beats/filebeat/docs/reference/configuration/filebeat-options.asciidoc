@@ -11,12 +11,11 @@ Here is a sample configuration:
 [source,yaml]
 -------------------------------------------------------------------------------------
 filebeat.prospectors:
-- input_type: log
+- type: log
   paths:
     - /var/log/apache/httpd-*.log
-  document_type: apache
 
-- input_type: log
+- type: log
   paths:
     - /var/log/messages
     - /var/log/*.log
@@ -24,14 +23,15 @@ filebeat.prospectors:
 
 ==== Options
 
-===== input_type
+===== type
 
 One of the following input types:
 
     * log: Reads every line of the log file (default)
     * stdin: Reads the standard in
+    * redis: Reads slow log entries from redis (experimental)
 
-The value that you specify here is used as the `input_type` for each event published to Logstash and Elasticsearch.
+The value that you specify here is used as the `type` for each event published to Logstash and Elasticsearch.
 
 [[prospector-paths]]
 ===== paths
@@ -41,11 +41,21 @@ supported by https://golang.org/pkg/path/filepath/#Glob[Golang Glob] are also
 supported here. For example, to fetch all files from a predefined level of
 subdirectories, the following pattern can be used: `/var/log/*/*.log`. This
 fetches all `.log` files from the subfolders of `/var/log`. It does not
-fetch log files from the `/var/log` folder itself. Currently it is not possible
-to recursively fetch all files in all subdirectories of a directory.
+fetch log files from the `/var/log` folder itself.
+It is possible to recursively fetch all files in all subdirectories of a directory
+using the optional <<recursive_glob>> settings.
 
 Filebeat starts a harvester for each file that it finds under the specified
 paths. You can specify one path per line. Each line begins with a dash (-).
+
+[[recursive_glob]]
+===== recursive_glob
+
+*`enabled`*:: Enable expanding `**` into recursive glob patterns. With this feature enabled,
+the rightmost `**` in each path is expanded into a fixed
+number of glob patterns. For example: `/foo/**` expands to `/foo`, `/foo/*`,
+`/foo/*/*`, and so on. The feature is disabled by default, and if enabled it expands a single `**`
+into a 8-level deep `*` pattern.
 
 ===== encoding
 
@@ -273,13 +283,11 @@ NOTE: Every time a file is renamed, the file state is updated and the counter fo
 [[clean-removed]]
 ===== clean_removed
 
-When this option is enabled, Filebeat cleans files from the registry if they cannot be found on disk anymore. This setting does not apply to renamed files or files that were moved to another directory that is still visible to Filebeat. This option is enabled by default.
-
+When this option is enabled, Filebeat cleans files from the registry if they cannot be found on disk anymore under the last known name. This means also files which were renamed after the harvester was finished will be removed. This option is enabled by default.
 
 If a shared drive disappears for a short period and appears again, all files will be read again from the beginning because the states were removed from the registry file. In such cases, we recommend that you disable the `clean_removed` option.
 
 You must disable this option if you also disable `close_removed`.
-
 
 [[scan-frequency]]
 ===== scan_frequency
@@ -294,14 +302,28 @@ If you require log lines to be sent in near real time do not use a very low `sca
 
 The default setting is 10s.
 
-[[filebeat-document-type]]
-===== document_type
 
-deprecated[5.5,Use `fields` instead]
+[[scan-sort]]
+===== scan.sort
 
-The event type to use for published lines read by harvesters. For Elasticsearch
-output, the value that you specify here is used to set the `type` field in the output
-document. The default value is `log`.
+[]experimental
+
+ If you specify a value other than the empty string for this setting you can determine whether to use ascending or descending order using `scan.order`. Possible values are `modtime` and `filename`. To sort by file modification time, use `modtime`, otherwise use `filename`. Leave this option empty to disable it.
+
+If you specify a value for this setting, you can use `scan.order` to configure whether files are scanned in ascending or descending order.
+
+The default setting is disabled.
+
+
+[[scan-order]]
+===== scan.order
+
+[]experimental
+
+Specifies whether to use ascending or descending order when `scan.sort` is set to a value other than none. Possible values are `asc` or `desc`.
+
+The default setting is `asc`.
+
 
 ===== harvester_buffer_size
 
@@ -337,7 +359,7 @@ If you enable this setting, the keys are copied top level in the output document
 *`overwrite_keys`*:: If `keys_under_root` and this setting are enabled, then the values from the decoded
 JSON object overwrite the fields that Filebeat normally adds (type, source, offset, etc.) in case of conflicts.
 
-*`add_error_key`*:: If this setting is enabled, Filebeat adds a "json_error" key in case of JSON
+*`add_error_key`*:: If this setting is enabled, Filebeat adds a "error.message" and "error.type: json" key in case of JSON
 unmarshalling errors or when a `message_key` is defined in the configuration but cannot be used.
 
 *`message_key`*:: An optional configuration setting that specifies a JSON key on
@@ -584,15 +606,14 @@ filebeat.shutdown_timeout: 5s
 
 include::../../../../libbeat/docs/generalconfig.asciidoc[]
 
+include::../../../../libbeat/docs/processors-config.asciidoc[]
+
 include::./reload-configuration.asciidoc[]
 
 include::../../../../libbeat/docs/outputconfig.asciidoc[]
 
 include::../../../../libbeat/docs/shared-path-config.asciidoc[]
 
-include::../../../../libbeat/docs/dashboardsconfig.asciidoc[]
+include::../../../../libbeat/docs/setup-config.asciidoc[]
 
 include::../../../../libbeat/docs/loggingconfig.asciidoc[]
-
-include::../../../../libbeat/docs/processors-config.asciidoc[]
-

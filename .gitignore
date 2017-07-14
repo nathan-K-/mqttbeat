@@ -5,3 +5,5 @@
 /mqttbeat
 /mqttbeat.test
 *.pyc
+
+/logs

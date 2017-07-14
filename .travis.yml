@@ -6,15 +6,15 @@ services:
 language: go
 
 go:
-  - 1.6
+  - master
 
 os:
   - linux
-  - osx
+ # - osx
 
 env:
   matrix:
-    - TARGETS="check"
+    #- TARGETS="check"
     - TARGETS="testsuite"
 
   global:
@@ -27,16 +27,20 @@ addons:
       - python-virtualenv
 
 before_install:
+  - pip install pyopenssl ndg-httpsclient pyasn1
   # Redo the travis setup but with the elastic/libbeat path. This is needed so the package path is correct
   - mkdir -p $HOME/gopath/src/github.com/nathan-k-/mqttbeat/
   - rsync -az ${TRAVIS_BUILD_DIR}/ $HOME/gopath/src/github.com/nathan-k-/mqttbeat/
   - export TRAVIS_BUILD_DIR=$HOME/gopath/src/github.com/nathan-k-/mqttbeat/
   - cd $HOME/gopath/src/github.com/nathan-k-/mqttbeat/
+  - go get github.com/Masterminds/glide
 
 install:
   - true
 
 script:
+  - make update-deps
+  - make
   - make $TARGETS
 
 after_success:

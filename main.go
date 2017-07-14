@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	err := beat.Run("mqttbeat", "", beater.New)
+	err := beat.Run("mqttbeat", "1.0.0", beater.New)
 	if err != nil {
 		os.Exit(1)
 	}

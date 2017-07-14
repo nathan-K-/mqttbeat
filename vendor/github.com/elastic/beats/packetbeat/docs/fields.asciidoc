@@ -18,9 +18,11 @@ grouped in the following categories:
 * <<exported-fields-cloud>>
 * <<exported-fields-common>>
 * <<exported-fields-dns>>
+* <<exported-fields-docker-processor>>
 * <<exported-fields-flows_event>>
 * <<exported-fields-http>>
 * <<exported-fields-icmp>>
+* <<exported-fields-kubernetes-processor>>
 * <<exported-fields-memcache>>
 * <<exported-fields-mongodb>>
 * <<exported-fields-mysql>>
@@ -229,7 +231,7 @@ Acknowledge multiple messages.
 [float]
 === amqp.arguments
 
-type: dict
+type: object
 
 Optional additional arguments passed to some methods. Can be of various types.
 
@@ -271,7 +273,7 @@ MIME content encoding.
 [float]
 === amqp.headers
 
-type: dict
+type: object
 
 Message header field table.
 
@@ -376,6 +378,12 @@ The hostname as returned by the operating system on which the Beat is running.
 
 
 [float]
+=== beat.timezone
+
+The timezone as returned by the operating system on which the Beat is running.
+
+
+[float]
 === beat.version
 
 The version of the beat that generated this event.
@@ -404,9 +412,40 @@ Arbitrary tags that can be set per Beat and per transaction type.
 [float]
 === fields
 
-type: dict
+type: object
 
 Contains user configurable fields.
+
+
+[float]
+== error Fields
+
+Error fields containing additional info in case of errors.
+
+
+
+[float]
+=== error.message
+
+type: text
+
+Error message.
+
+
+[float]
+=== error.code
+
+type: long
+
+Error code.
+
+
+[float]
+=== error.type
+
+type: keyword
+
+Error type.
 
 
 [[exported-fields-cassandra]]
@@ -770,7 +809,7 @@ The paging_state is a bytes value that should be used in QUERY/EXECUTE to contin
 [float]
 === cassandra.response.supported
 
-type: dict
+type: object
 
 Indicates which startup options are supported by the server. This message comes as a response to an OPTIONS message.
 
@@ -1029,6 +1068,12 @@ Instance ID of the host machine.
 
 
 [float]
+=== meta.cloud.instance_name
+
+Instance name of the host machine.
+
+
+[float]
 === meta.cloud.machine_type
 
 example: t2.medium
@@ -1112,16 +1157,6 @@ format: Dotted notation.
 
 If the server initiating the transaction is a proxy, this field contains the original client IP address. For HTTP, for example, the IP address extracted from a configurable HTTP header, by default `X-Forwarded-For`.
 Unless this field is disabled, it always has a value, and it matches the `client_ip` for non proxy clients.
-
-
-[float]
-=== client_location
-
-type: geo_point
-
-example: 40.715, -74.011
-
-DEPRECATED. Please use `client_geoip` instead. The GeoIP location of the `real_ip` IP address or of the `client_ip` address if the `real_ip` is disabled. The field is a string containing the latitude and longitude separated by a comma.
 
 
 [float]
@@ -1300,7 +1335,7 @@ The effective top-level domain (eTLD) plus one more label. For example, the eTLD
 [float]
 === dns.answers
 
-type: dict
+type: object
 
 An array containing a dictionary about each answer section returned by the server.
 
@@ -1351,7 +1386,7 @@ The data describing the resource. The meaning of this data depends on the type a
 [float]
 === dns.authorities
 
-type: dict
+type: object
 
 An array containing a dictionary for each authority section from the answer.
 
@@ -1388,7 +1423,7 @@ The class of DNS data contained in this resource record.
 [float]
 === dns.additionals
 
-type: dict
+type: object
 
 An array containing a dictionary for each additional section from the answer.
 
@@ -1463,6 +1498,47 @@ Extended response code field.
 type: long
 
 Requestor's UDP payload size (in bytes).
+
+[[exported-fields-docker-processor]]
+== docker Fields
+
+beta[]
+Docker stats collected from Docker.
+
+
+
+
+[float]
+=== docker.container.id
+
+type: keyword
+
+Unique container id.
+
+
+[float]
+=== docker.container.image
+
+type: keyword
+
+Name of the image the container was built on.
+
+
+[float]
+=== docker.container.name
+
+type: keyword
+
+Container name.
+
+
+[float]
+=== docker.container.labels
+
+type: object
+
+Image labels.
+
 
 [[exported-fields-flows_event]]
 == Flow Event Fields
@@ -1774,7 +1850,7 @@ The query parameters or form values. The query parameters are available in the R
 [float]
 === http.request.headers
 
-type: dict
+type: object
 
 A map containing the captured header fields from the request. Which headers to capture is configurable. If headers with the same header name are present in the message, they will be separated by commas.
 
@@ -1809,7 +1885,7 @@ The HTTP status phrase.
 [float]
 === http.response.headers
 
-type: dict
+type: object
 
 A map containing the captured header fields from the response. Which headers to capture is configurable. If headers with the same header name are present in the message, they will be separated by commas.
 
@@ -1873,6 +1949,63 @@ The response type.
 type: long
 
 The response code.
+
+[[exported-fields-kubernetes-processor]]
+== kubernetes Fields
+
+beta[]
+Kubernetes metadata added by the kubernetes processor
+
+
+
+
+[float]
+=== kubernetes.pod.name
+
+type: keyword
+
+Kubernetes pod name
+
+
+[float]
+=== kubernetes.namespace
+
+type: keyword
+
+Kubernetes namespace
+
+
+[float]
+=== kubernetes.labels
+
+type: object
+
+Kubernetes labels map
+
+
+[float]
+=== kubernetes.annotations
+
+type: object
+
+Kubernetes annotations map
+
+
+[float]
+=== kubernetes.container.name
+
+type: keyword
+
+Kubernetes container name
+
+
+[float]
+=== kubernetes.container.image
+
+type: keyword
+
+Kubernetes container image
+
 
 [[exported-fields-memcache]]
 == Memcache Fields
@@ -2012,7 +2145,7 @@ The status code value returned in the response (binary protocol only).
 [float]
 === memcache.request.keys
 
-type: list
+type: array
 
 The list of keys sent in the store or load commands.
 
@@ -2020,7 +2153,7 @@ The list of keys sent in the store or load commands.
 [float]
 === memcache.response.keys
 
-type: list
+type: array
 
 The list of keys returned for the load command (if present).
 
@@ -2044,7 +2177,7 @@ The number of values found in the memcache response message. If the command does
 [float]
 === memcache.request.values
 
-type: list
+type: array
 
 The list of base64 encoded values sent with the request (if present).
 
@@ -2052,7 +2185,7 @@ The list of base64 encoded values sent with the request (if present).
 [float]
 === memcache.response.values
 
-type: list
+type: array
 
 The list of base64 encoded values sent with the response (if present).
 
@@ -2208,7 +2341,7 @@ The CAS (compare-and-swap) identifier to be used with CAS-based updates (if pres
 [float]
 === memcache.response.stats
 
-type: list
+type: array
 
 The list of statistic values returned. Each entry is a dictionary with the fields "name" and "value".
 

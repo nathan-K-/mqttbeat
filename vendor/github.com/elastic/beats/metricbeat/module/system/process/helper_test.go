@@ -6,6 +6,7 @@ package process
 import (
 	"os"
 	"runtime"
+	"sort"
 	"testing"
 	"time"
 
@@ -51,11 +52,16 @@ func TestGetProcess(t *testing.T) {
 	assert.True(t, (process.Cpu.User >= 0))
 	assert.True(t, (process.Cpu.Sys >= 0))
 
-	assert.True(t, (process.Ctime.Unix() <= time.Now().Unix()))
+	assert.True(t, (process.SampleTime.Unix() <= time.Now().Unix()))
 
 	switch runtime.GOOS {
 	case "darwin", "linux", "freebsd":
 		assert.True(t, len(process.Env) > 0, "empty environment")
+	}
+
+	switch runtime.GOOS {
+	case "linux":
+		assert.True(t, (len(process.Cwd) > 0))
 	}
 }
 
@@ -108,35 +114,30 @@ func TestProcMemPercentage(t *testing.T) {
 }
 
 func TestProcCpuPercentage(t *testing.T) {
-	procStats := ProcStats{}
-
-	ctime := time.Now()
-
-	p2 := Process{
-		Pid: 3545,
-		Cpu: gosigar.ProcTime{
-			User:  14794,
-			Sys:   47,
-			Total: 14841,
-		},
-		Ctime: ctime,
-	}
-
-	p1 := Process{
-		Pid: 3545,
+	p1 := &Process{
 		Cpu: gosigar.ProcTime{
 			User:  11345,
 			Sys:   37,
 			Total: 11382,
 		},
-		Ctime: ctime.Add(-1 * time.Second),
+		SampleTime: time.Now(),
 	}
 
-	procStats.ProcsMap = make(ProcsMap)
-	procStats.ProcsMap[p1.Pid] = &p1
+	p2 := &Process{
+		Cpu: gosigar.ProcTime{
+			User:  14794,
+			Sys:   47,
+			Total: 14841,
+		},
+		SampleTime: p1.SampleTime.Add(time.Second),
+	}
 
-	totalPercent := GetProcCpuPercentage(&p1, &p2)
-	assert.Equal(t, totalPercent, 3.459)
+	NumCPU = 48
+	defer func() { NumCPU = runtime.NumCPU() }()
+
+	totalPercentNormalized, totalPercent := GetProcCpuPercentage(p1, p2)
+	assert.EqualValues(t, 0.0721, totalPercentNormalized)
+	assert.EqualValues(t, 3.459, totalPercent)
 }
 
 // BenchmarkGetProcess runs a benchmark of the GetProcess method with caching
@@ -168,5 +169,120 @@ func BenchmarkGetProcess(b *testing.B) {
 		assert.NoError(b, err)
 
 		procs[pid] = process
+	}
+}
+
+func TestIncludeTopProcesses(t *testing.T) {
+	processes := []Process{
+		{
+			Pid:         1,
+			cpuTotalPct: 10,
+			Mem:         gosigar.ProcMem{Resident: 3000},
+		},
+		{
+			Pid:         2,
+			cpuTotalPct: 5,
+			Mem:         gosigar.ProcMem{Resident: 4000},
+		},
+		{
+			Pid:         3,
+			cpuTotalPct: 7,
+			Mem:         gosigar.ProcMem{Resident: 2000},
+		},
+		{
+			Pid:         4,
+			cpuTotalPct: 5,
+			Mem:         gosigar.ProcMem{Resident: 8000},
+		},
+		{
+			Pid:         5,
+			cpuTotalPct: 12,
+			Mem:         gosigar.ProcMem{Resident: 9000},
+		},
+		{
+			Pid:         6,
+			cpuTotalPct: 5,
+			Mem:         gosigar.ProcMem{Resident: 7000},
+		},
+		{
+			Pid:         7,
+			cpuTotalPct: 80,
+			Mem:         gosigar.ProcMem{Resident: 11000},
+		},
+		{
+			Pid:         8,
+			cpuTotalPct: 50,
+			Mem:         gosigar.ProcMem{Resident: 13000},
+		},
+		{
+			Pid:         9,
+			cpuTotalPct: 15,
+			Mem:         gosigar.ProcMem{Resident: 1000},
+		},
+		{
+			Pid:         10,
+			cpuTotalPct: 60,
+			Mem:         gosigar.ProcMem{Resident: 500},
+		},
+	}
+
+	tests := []struct {
+		Name         string
+		Cfg          includeTopConfig
+		ExpectedPids []int
+	}{
+		{
+			Name:         "top 2 processes by CPU",
+			Cfg:          includeTopConfig{Enabled: true, ByCPU: 2},
+			ExpectedPids: []int{7, 10},
+		},
+		{
+			Name:         "top 4 processes by CPU",
+			Cfg:          includeTopConfig{Enabled: true, ByCPU: 4},
+			ExpectedPids: []int{7, 10, 8, 9},
+		},
+		{
+			Name:         "top 2 processes by memory",
+			Cfg:          includeTopConfig{Enabled: true, ByMemory: 2},
+			ExpectedPids: []int{8, 7},
+		},
+		{
+			Name:         "top 4 processes by memory",
+			Cfg:          includeTopConfig{Enabled: true, ByMemory: 4},
+			ExpectedPids: []int{8, 7, 5, 4},
+		},
+		{
+			Name:         "top 2 processes by CPU + top 2 by memory",
+			Cfg:          includeTopConfig{Enabled: true, ByCPU: 2, ByMemory: 2},
+			ExpectedPids: []int{7, 10, 8},
+		},
+		{
+			Name:         "top 4 processes by CPU + top 4 by memory",
+			Cfg:          includeTopConfig{Enabled: true, ByCPU: 4, ByMemory: 4},
+			ExpectedPids: []int{7, 10, 8, 9, 5, 4},
+		},
+		{
+			Name:         "enabled false",
+			Cfg:          includeTopConfig{Enabled: false, ByCPU: 4, ByMemory: 4},
+			ExpectedPids: []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+		},
+		{
+			Name:         "enabled true but cpu & mem not configured",
+			Cfg:          includeTopConfig{Enabled: true},
+			ExpectedPids: []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+		},
+	}
+
+	for _, test := range tests {
+		procStats := ProcStats{IncludeTop: test.Cfg}
+		res := procStats.includeTopProcesses(processes)
+
+		resPids := []int{}
+		for _, p := range res {
+			resPids = append(resPids, p.Pid)
+		}
+		sort.Ints(test.ExpectedPids)
+		sort.Ints(resPids)
+		assert.Equal(t, resPids, test.ExpectedPids, test.Name)
 	}
 }

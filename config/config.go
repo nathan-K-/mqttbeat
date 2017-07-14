@@ -6,9 +6,14 @@ package config
 import "time"
 
 type Config struct {
-	Period time.Duration `config:"period"`
+	BrokerUrl string `config:"broker_url"`
+	TopicsSubscribe []string `config:"topics_subscribe"`
+	DecodePaylod bool `config:"decode_payload"`
+	Period          time.Duration `config:"period"`
 }
 
 var DefaultConfig = Config{
-	Period: 1 * time.Second,
+	BrokerUrl: "tcp://localhost:1883",
+	TopicsSubscribe: []string{"/test/mqttbeat/#?1"},
+	DecodePaylod: true,
 }

@@ -4,7 +4,7 @@
 [partintro]
 --
 Filebeat is based on the Logstash Forwarder source code and replaces Logstash Forwarder as the method
-to use for tailing log files and forwarding them to Logstash. 
+to use for tailing log files and forwarding them to Logstash.
 
 Filebeat introduces the following major changes:
 
@@ -135,29 +135,24 @@ The equivalent `prospectors` section would look like this:
 [source,yaml]
 -------------------------------------------------------------------------------------
 filebeat.prospectors:
-- input_type: log
+- type: log
   paths:
     - /var/log/messages
     - /var/log/*.log
-  document_type: syslog <1>
   fields:
     service: apache
     zone: us-east-1
   fields_under_root: true
-- input_type: stdin <2>
-  document_type: stdin
-- input_type: log
+- type: stdin <1>
+- type: log
   paths:
     - /var/log/apache2/httpd-*.log
-  document_type: apache
 -------------------------------------------------------------------------------------
 
-<1> The `document_type` option controls the output `type` field, which is used by the
-    Elasticsearch output to determine the document type.
-<2> The explicit `input_type` option was introduced to differentiate between normal files and
+<1> The explicit `type` option was introduced to differentiate between normal files and
     stdin. In the future, additional types might be supported.
 
-As you can see, apart from the new `document_type` and `input_type` options,
+As you can see, apart from the new `type` options,
 which were before implicitly defined via the `type` custom field, the remaining
 options can be migrated mechanically.
 
@@ -284,10 +279,9 @@ Filebeat configuration:
 [source,yaml]
 -------------------------------------------------------------------------------------
 filebeat.prospectors:
-- input_type: log
+- type: log
   paths:
     - /var/log/*.log
-  document_type: syslog
   fields:
     service: test01
 output.elasticsearch:
@@ -372,10 +366,9 @@ you can use the <<fields-under-root>> configuration option:
 [source,yaml]
 -------------------------------------------------------------------------------------
 filebeat.prospectors:
-- input_type: log
+- type: log
   paths:
     - /var/log/*.log
-  document_type: syslog
   fields:
     service: test01
   fields_under_root: true

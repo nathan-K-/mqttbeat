@@ -1,10 +1,17 @@
 ################### Mqttbeat Configuration Example #########################
 
 ############################# Mqttbeat ######################################
-
+# Specific config
 mqttbeat:
-  # Defines how often an event is sent to the output
-  period: 1s
+  # Url of the MQTT broker, with protocol and port
+  broker_url: "tcp://172.22.0.2:1883"
+  # Try to decode the payload ? Support msgpack and json
+  decode_payload: true
+  # List of string?int, representing a topic and the associated QoS
+  # (between 0 and 2)
+  topics_subscribe:
+    - /test/mqttbeat/#?1
+    - /test/sub/#?1
 
 #================================ General =====================================
 
@@ -20,6 +27,31 @@ mqttbeat:
 # output.
 #fields:
 #  env: staging
+
+
+#============================== Dashboards =====================================
+# These settings control loading the sample dashboards to the Kibana index. Loading
+# the dashboards is disabled by default and can be enabled either by setting the
+# options here, or by using the `-setup` CLI flag or the `setup` command.
+#setup.dashboards.enabled: false
+
+# The URL from where to download the dashboards archive. By default this URL
+# has a value which is computed based on the Beat name and version. For released
+# versions, this URL points to the dashboard archive on the artifacts.elastic.co
+# website.
+#setup.dashboards.url:
+
+#============================== Kibana =====================================
+
+# Starting with Beats version 6.0.0, the dashboards are loaded via the Kibana API. 
+# This requires a Kibana endpoint configuration.
+setup.kibana:
+
+  # Kibana Host
+  # Scheme and port can be left out and will be set to the default (http and 5601)
+  # In case you specify and additional path, the scheme is required: http://localhost:5601/path
+  # IPv6 addresses should always be defined as: https://[2001:db8::1]:5601
+  #host: "localhost:5601"
 
 #================================ Outputs =====================================
 

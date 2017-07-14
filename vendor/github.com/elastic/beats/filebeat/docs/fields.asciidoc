@@ -16,9 +16,13 @@ grouped in the following categories:
 * <<exported-fields-auditd>>
 * <<exported-fields-beat>>
 * <<exported-fields-cloud>>
+* <<exported-fields-docker-processor>>
+* <<exported-fields-icinga>>
+* <<exported-fields-kubernetes-processor>>
 * <<exported-fields-log>>
 * <<exported-fields-mysql>>
 * <<exported-fields-nginx>>
+* <<exported-fields-redis>>
 * <<exported-fields-system>>
 
 --
@@ -229,6 +233,22 @@ Country ISO code.
 type: geo_point
 
 The longitude and latitude.
+
+
+[float]
+=== apache2.access.geoip.region_name
+
+type: keyword
+
+The region name.
+
+
+[float]
+=== apache2.access.geoip.city_name
+
+type: keyword
+
+The city name.
 
 
 [float]
@@ -454,6 +474,12 @@ The hostname as returned by the operating system on which the Beat is running.
 
 
 [float]
+=== beat.timezone
+
+The timezone as returned by the operating system on which the Beat is running.
+
+
+[float]
 === beat.version
 
 The version of the beat that generated this event.
@@ -482,9 +508,40 @@ Arbitrary tags that can be set per Beat and per transaction type.
 [float]
 === fields
 
-type: dict
+type: object
 
 Contains user configurable fields.
+
+
+[float]
+== error Fields
+
+Error fields containing additional info in case of errors.
+
+
+
+[float]
+=== error.message
+
+type: text
+
+Error message.
+
+
+[float]
+=== error.code
+
+type: long
+
+Error code.
+
+
+[float]
+=== error.type
+
+type: keyword
+
+Error type.
 
 
 [[exported-fields-cloud]]
@@ -506,6 +563,12 @@ Name of the cloud provider. Possible values are ec2, gce, or digitalocean.
 === meta.cloud.instance_id
 
 Instance ID of the host machine.
+
+
+[float]
+=== meta.cloud.instance_name
+
+Instance name of the host machine.
 
 
 [float]
@@ -536,6 +599,210 @@ Name of the project in Google Cloud.
 === meta.cloud.region
 
 Region in which this host is running.
+
+
+[[exported-fields-docker-processor]]
+== docker Fields
+
+beta[]
+Docker stats collected from Docker.
+
+
+
+
+[float]
+=== docker.container.id
+
+type: keyword
+
+Unique container id.
+
+
+[float]
+=== docker.container.image
+
+type: keyword
+
+Name of the image the container was built on.
+
+
+[float]
+=== docker.container.name
+
+type: keyword
+
+Container name.
+
+
+[float]
+=== docker.container.labels
+
+type: object
+
+Image labels.
+
+
+[[exported-fields-icinga]]
+== Icinga Fields
+
+Icinga Module
+
+
+
+[float]
+== icinga Fields
+
+
+
+
+[float]
+== debug Fields
+
+Contains fields for the Icinga debug logs.
+
+
+
+[float]
+=== icinga.debug.facility
+
+type: keyword
+
+Specifies what component of Icinga logged the message.
+
+
+[float]
+=== icinga.debug.severity
+
+type: keyword
+
+Possible values are "debug", "notice", "information", "warning" or "critical".
+
+
+[float]
+=== icinga.debug.message
+
+type: text
+
+The logged message.
+
+
+[float]
+== main Fields
+
+Contains fields for the Icinga main logs.
+
+
+
+[float]
+=== icinga.main.facility
+
+type: keyword
+
+Specifies what component of Icinga logged the message.
+
+
+[float]
+=== icinga.main.severity
+
+type: keyword
+
+Possible values are "debug", "notice", "information", "warning" or "critical".
+
+
+[float]
+=== icinga.main.message
+
+type: text
+
+The logged message.
+
+
+[float]
+== startup Fields
+
+Contains fields for the Icinga startup logs.
+
+
+
+[float]
+=== icinga.startup.facility
+
+type: keyword
+
+Specifies what component of Icinga logged the message.
+
+
+[float]
+=== icinga.startup.severity
+
+type: keyword
+
+Possible values are "debug", "notice", "information", "warning" or "critical".
+
+
+[float]
+=== icinga.startup.message
+
+type: text
+
+The logged message.
+
+
+[[exported-fields-kubernetes-processor]]
+== kubernetes Fields
+
+beta[]
+Kubernetes metadata added by the kubernetes processor
+
+
+
+
+[float]
+=== kubernetes.pod.name
+
+type: keyword
+
+Kubernetes pod name
+
+
+[float]
+=== kubernetes.namespace
+
+type: keyword
+
+Kubernetes namespace
+
+
+[float]
+=== kubernetes.labels
+
+type: object
+
+Kubernetes labels map
+
+
+[float]
+=== kubernetes.annotations
+
+type: object
+
+Kubernetes annotations map
+
+
+[float]
+=== kubernetes.container.name
+
+type: keyword
+
+Kubernetes container name
+
+
+[float]
+=== kubernetes.container.image
+
+type: keyword
+
+Kubernetes container image
 
 
 [[exported-fields-log]]
@@ -576,25 +843,11 @@ The content of the line read from the log file.
 
 
 [float]
-=== type
+=== prospector.type
 
 required: True
 
-The name of the log event. This field is set to the value specified for the `document_type` option in the prospector section of the Filebeat config file.
-
-
-[float]
-=== input_type
-
-required: True
-
-The input type from which the event was generated. This field is set to the value specified for the `input_type` option in the prospector section of the Filebeat config file.
-
-
-[float]
-=== error
-
-Ingestion pipeline error message, added in case there are errors reported by the Ingest Node in Elasticsearch.
+The prospector type from which the event was generated. This field is set to the value specified for the `type` option in the prospector section of the Filebeat config file.
 
 
 [float]
@@ -766,11 +1019,19 @@ Contains fields for the Nginx access logs.
 
 
 [float]
+=== nginx.access.remote_ip_list
+
+type: array
+
+An array of remote IP addresses. It is a list because it is common to include, besides the client IP address, IP addresses from headers like `X-Forwarded-For`. See also the `remote_ip` field.
+
+
+[float]
 === nginx.access.remote_ip
 
 type: keyword
 
-Client IP address.
+Client IP address. The first public IP address from the `remote_ip_list` array. If no public IP addresses are present, this field contains the first private IP address from the `remote_ip_list` array.
 
 
 [float]
@@ -954,6 +1215,22 @@ The longitude and latitude.
 
 
 [float]
+=== nginx.access.geoip.region_name
+
+type: keyword
+
+The region name.
+
+
+[float]
+=== nginx.access.geoip.city_name
+
+type: keyword
+
+The city name.
+
+
+[float]
 == error Fields
 
 Contains fields for the Nginx error logs.
@@ -998,6 +1275,105 @@ Connection identifier.
 type: text
 
 The error message
+
+
+[[exported-fields-redis]]
+== redis Fields
+
+redis Module
+
+
+
+[float]
+== redis Fields
+
+
+
+
+[float]
+== log Fields
+
+Redis log files
+
+
+
+[float]
+=== redis.log.pid
+
+type: long
+
+The process ID of the Redis server.
+
+
+[float]
+=== redis.log.role
+
+type: keyword
+
+The role of the Redis instance. Can be one of `master`, `slave`, `child` (for RDF/AOF writing child), or `sentinel`.
+
+
+[float]
+=== redis.log.level
+
+type: keyword
+
+The log level. Can be one of `debug`, `verbose`, `notice`, or `warning`.
+
+
+[float]
+=== redis.log.message
+
+type: text
+
+The log message
+
+
+[float]
+== slowlog Fields
+
+Slow logs are retrieved from Redis via a network connection.
+
+
+
+[float]
+=== redis.slowlog.cmd
+
+type: keyword
+
+The command executed.
+
+
+[float]
+=== redis.slowlog.duration.us
+
+type: long
+
+How long it took to execute the command in microseconds.
+
+
+[float]
+=== redis.slowlog.id
+
+type: long
+
+The ID of the query.
+
+
+[float]
+=== redis.slowlog.key
+
+type: keyword
+
+The key on which the command was executed.
+
+
+[float]
+=== redis.slowlog.args
+
+type: keyword
+
+The arguments with which the command was called.
 
 
 [[exported-fields-system]]
