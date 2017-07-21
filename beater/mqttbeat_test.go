@@ -3,12 +3,11 @@ package beater
 import (
 	"github.com/elastic/beats/libbeat/common"
 	"gopkg.in/vmihailenco/msgpack.v2"
-	"testing"
 	"reflect"
+	"testing"
 )
 
-
-func TestDecodeMsgpackJson(t *testing.T){
+func TestDecodeMsgpackJson(t *testing.T) {
 
 	reference := make(common.MapStr)
 	reference["hello"] = "world"
@@ -22,7 +21,7 @@ func TestDecodeMsgpackJson(t *testing.T){
 	}
 }
 
-func TestDecodeJson(t *testing.T){
+func TestDecodeJson(t *testing.T) {
 
 	reference := make(common.MapStr)
 	reference["hello"] = "world"
@@ -35,7 +34,7 @@ func TestDecodeJson(t *testing.T){
 	}
 }
 
-func TestDecodeText(t *testing.T){
+func TestDecodeText(t *testing.T) {
 	payload := "Bonjour, monde!"
 
 	reference := make(common.MapStr)
@@ -48,7 +47,7 @@ func TestDecodeText(t *testing.T){
 	}
 }
 
-func TestParseTopic(t *testing.T){
+func TestParseTopic(t *testing.T) {
 	input := []string{"some/topic?0", "some/ohter/topic?2", "final/topic?1"}
 
 	reference := map[string]byte{"some/topic": 0, "some/ohter/topic": 2, "final/topic": 1}
