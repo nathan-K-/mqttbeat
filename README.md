@@ -1,9 +1,11 @@
 # Mqttbeat
 [![Build Status](https://travis-ci.org/nathan-K-/mqttbeat.svg?branch=master)](https://travis-ci.org/nathan-K-/mqttbeat)
+[![Go Report Card](https://goreportcard.com/badge/github.com/nathan-K-/mqttbeat)](https://goreportcard.com/report/github.com/nathan-K-/mqttbeat)
 
 Welcome to Mqttbeat.
 
 This beat will allow you to put MQTT messages in an elasticsearch instance.
+You can use [this little project](https://github.com/nathan-K-/stack-docker) to easily start an elastic stack.
 
 Ensure that this folder is at the following location:
 `${GOPATH}/github.com/nathan-k-/mqttbeat`
