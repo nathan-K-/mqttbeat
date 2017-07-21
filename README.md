@@ -1,5 +1,6 @@
 # Mqttbeat
 [![Build Status](https://travis-ci.org/nathan-K-/mqttbeat.svg?branch=master)](https://travis-ci.org/nathan-K-/mqttbeat)
+[![Go Report Card](https://goreportcard.com/badge/github.com/nathan-K-/mqttbeat)](https://goreportcard.com/report/github.com/nathan-K-/mqttbeat)
 
 Welcome to Mqttbeat.
 

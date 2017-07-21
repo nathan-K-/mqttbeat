@@ -1,11 +1,11 @@
 package beater
 
 import (
-	"fmt"
-	"time"
 	"encoding/json"
-	"strings"
+	"fmt"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/elastic/beats/libbeat/beat"
 	"github.com/elastic/beats/libbeat/common"
@@ -19,23 +19,24 @@ import (
 	"github.com/nathan-k-/mqttbeat/config"
 )
 
+// Mqttbeat represent a mqtt beat object
 type Mqttbeat struct {
-	done   chan struct{}
-	beatConfig config.Config
+	done          chan struct{}
+	beatConfig    config.Config
 	elasticClient publisher.Client
-	mqttClient MQTT.Client
+	mqttClient    MQTT.Client
 }
 
 // Prepare mqtt client
 func setupMqttClient(bt *Mqttbeat) {
 	mqttClientOpt := MQTT.NewClientOptions()
-	mqttClientOpt.AddBroker(bt.beatConfig.BrokerUrl)
-	logp.Info("BROKER url " + bt.beatConfig.BrokerUrl)
+	mqttClientOpt.AddBroker(bt.beatConfig.BrokerURL)
+	logp.Info("BROKER url " + bt.beatConfig.BrokerURL)
 
 	bt.mqttClient = MQTT.NewClient(mqttClientOpt)
 }
 
-// Creates beater
+// New function creates our mqtt beater
 func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 	config := config.DefaultConfig
 	if err := cfg.Unpack(&config); err != nil {
@@ -43,7 +44,7 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 	}
 
 	bt := &Mqttbeat{
-		done:   make(chan struct{}),
+		done:       make(chan struct{}),
 		beatConfig: config,
 	}
 	setupMqttClient(bt)
@@ -54,17 +55,15 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 	logp.Info("MQTT Client connected")
 
 	subscriptions := ParseTopics(bt.beatConfig.TopicsSubscribe)
-		//bt.beatConfig.TopicsSubscribe
+	//bt.beatConfig.TopicsSubscribe
 
 	// Mqtt client - Subscribe to every topic in the config file, and bind with message handler
-	if token := bt.mqttClient.SubscribeMultiple(subscriptions, bt.onMessage);
-	token.Wait() && token.Error() != nil {
+	if token := bt.mqttClient.SubscribeMultiple(subscriptions, bt.onMessage); token.Wait() && token.Error() != nil {
 		panic(token.Error())
 	}
 
 	return bt, nil
 }
-
 
 // Mqtt message handler
 func (bt *Mqttbeat) onMessage(client MQTT.Client, msg MQTT.Message) {
@@ -79,15 +78,15 @@ func (bt *Mqttbeat) onMessage(client MQTT.Client, msg MQTT.Message) {
 		event["payload"] = msg.Payload()
 	}
 
-	event["beat"]= common.MapStr{"index": "mqttbeat", "type":"message"}
+	event["beat"] = common.MapStr{"index": "mqttbeat", "type": "message"}
 	event["@timestamp"] = common.Time(time.Now())
 	event["topic"] = msg.Topic()
 	// Finally sending the message to elasticsearch
 	bt.elasticClient.PublishEvent(event)
 	logp.Info("Event sent")
-	}
+}
 
-
+// Run is used to start this beater, once configured and connected
 func (bt *Mqttbeat) Run(b *beat.Beat) error {
 	logp.Info("mqttbeat is running! Hit CTRL-C to stop it.")
 	bt.elasticClient = b.Publisher.Connect()
@@ -101,38 +100,41 @@ func (bt *Mqttbeat) Run(b *beat.Beat) error {
 	}
 }
 
+// Stop is used to close this beater
 func (bt *Mqttbeat) Stop() {
 	bt.mqttClient.Disconnect(250)
 	bt.elasticClient.Close()
 	close(bt.done)
 }
 
-// Helpers
+// DecodePayload will try to decode the payload. If every check fails, it will
+// return the payload as a string
 func DecodePayload(payload []byte) common.MapStr {
 	event := make(common.MapStr)
 
 	// A msgpack payload must be a json-like object
 	err := msgpack.Unmarshal(payload, &event)
-	if  err == nil {
+	if err == nil {
 		logp.Info("Payload decoded - msgpack")
 		return event
 	}
 
 	err = json.Unmarshal(payload, &event)
-	if  err == nil {
+	if err == nil {
 		logp.Info("Payload decoded - json")
 		return event
 	}
 
 	// default case
-	event["payload"]= string(payload)
+	event["payload"] = string(payload)
 	logp.Info("Payload decoded - text")
 	return event
 }
 
-func ParseTopics(topics []string) map[string]byte{
+// ParseTopics will parse the config file and return a map with topic:QoS
+func ParseTopics(topics []string) map[string]byte {
 	subscriptions := make(map[string]byte)
-	for _, value := range topics{
+	for _, value := range topics {
 		// Fist, spliting the string topic?qos
 		topic, qosStr := strings.Split(value, "?")[0], strings.Split(value, "?")[1]
 		// Then, parsing the qos to an int
@@ -140,7 +142,7 @@ func ParseTopics(topics []string) map[string]byte{
 		if err != nil {
 			panic("Error parsing topics")
 		}
-		// Finally, filling the subscriptions map 
+		// Finally, filling the subscriptions map
 		subscriptions[topic] = byte(qosInt)
 	}
 	fmt.Println(subscriptions)
