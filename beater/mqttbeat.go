@@ -145,6 +145,5 @@ func ParseTopics(topics []string) map[string]byte {
 		// Finally, filling the subscriptions map
 		subscriptions[topic] = byte(qosInt)
 	}
-	fmt.Println(subscriptions)
 	return subscriptions
 }
