@@ -5,6 +5,9 @@
 mqttbeat:
   # Url of the MQTT broker, with protocol and port
   broker_url: "tcp://172.22.0.2:1883"
+  # MQTT broker username and password
+  broker_username: ""
+  broker_password: ""
   # Try to decode the payload ? Support msgpack and json
   decode_payload: true
   # List of string?int, representing a topic and the associated QoS
