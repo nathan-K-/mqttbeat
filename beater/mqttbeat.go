@@ -32,7 +32,12 @@ func setupMqttClient(bt *Mqttbeat) {
 	mqttClientOpt := MQTT.NewClientOptions()
 	mqttClientOpt.AddBroker(bt.beatConfig.BrokerURL)
 	logp.Info("BROKER url " + bt.beatConfig.BrokerURL)
-
+	
+	if bt.beatConfig.BrokerUsername != "" && bt.beatConfig.BrokerPassword != "" {
+		logp.Info("BROKER username " + bt.beatConfig.BrokerUsername)
+		mqttClientOpt.SetUsername(bt.beatConfig.BrokerUsername)
+		mqttClientOpt.SetPassword(bt.beatConfig.BrokerPassword)
+	}
 	bt.mqttClient = MQTT.NewClient(mqttClientOpt)
 }
 
