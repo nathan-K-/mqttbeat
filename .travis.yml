@@ -28,7 +28,8 @@ addons:
       - python-virtualenv
 
 before_install:
-  - pip install pyopenssl pyasn1
+  - pip install --upgrade "pip"
+  - pip install pyopenssl pyasn1 ndg-httpsclient
   # Redo the travis setup but with the elastic/libbeat path. This is needed so the package path is correct
   - mkdir -p $HOME/gopath/src/github.com/nathan-k-/mqttbeat/
   - rsync -az ${TRAVIS_BUILD_DIR}/ $HOME/gopath/src/github.com/nathan-k-/mqttbeat/
