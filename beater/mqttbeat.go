@@ -31,14 +31,38 @@ type Mqttbeat struct {
 func setupMqttClient(bt *Mqttbeat) {
 	mqttClientOpt := MQTT.NewClientOptions()
 	mqttClientOpt.AddBroker(bt.beatConfig.BrokerURL)
-	logp.Info("BROKER url " + bt.beatConfig.BrokerURL)
+	logp.Info("BROKER url: %s", bt.beatConfig.BrokerURL)
+	mqttClientOpt.SetConnectionLostHandler(bt.reConnectHandler)
+	mqttClientOpt.SetOnConnectHandler(bt.subscribeOnConnect)
 	
 	if bt.beatConfig.BrokerUsername != "" && bt.beatConfig.BrokerPassword != "" {
-		logp.Info("BROKER username " + bt.beatConfig.BrokerUsername)
+		logp.Info("BROKER username: %s", bt.beatConfig.BrokerUsername)
 		mqttClientOpt.SetUsername(bt.beatConfig.BrokerUsername)
 		mqttClientOpt.SetPassword(bt.beatConfig.BrokerPassword)
 	}
 	bt.mqttClient = MQTT.NewClient(mqttClientOpt)
+}
+
+func (bt *Mqttbeat) connect(client MQTT.Client) {
+	if token := client.Connect(); token.Wait() && token.Error() != nil {
+		logp.Info("Failed to connect to broker, waiting 5 seconds and retrying")
+		time.Sleep(5 * time.Second)
+		bt.reConnectHandler(client, token.Error())
+		return
+	}
+	logp.Info("MQTT Client connected: %t", client.IsConnected())
+	bt.mqttClient = client
+}
+
+func (bt *Mqttbeat) subscribeOnConnect(client MQTT.Client) {
+	subscriptions := ParseTopics(bt.beatConfig.TopicsSubscribe)
+	//bt.beatConfig.TopicsSubscribe
+
+	// Mqtt client - Subscribe to every topic in the config file, and bind with message handler
+	if token := bt.mqttClient.SubscribeMultiple(subscriptions, bt.onMessage); token.Wait() && token.Error() != nil {
+		panic(token.Error())
+	}
+	logp.Info("Subscribed to configured topics")
 }
 
 // New function creates our mqtt beater
@@ -53,26 +77,13 @@ func New(b *beat.Beat, cfg *common.Config) (beat.Beater, error) {
 		beatConfig: config,
 	}
 	setupMqttClient(bt)
-
-	if token := bt.mqttClient.Connect(); token.Wait() && token.Error() != nil {
-		panic(token.Error())
-	}
-	logp.Info("MQTT Client connected")
-
-	subscriptions := ParseTopics(bt.beatConfig.TopicsSubscribe)
-	//bt.beatConfig.TopicsSubscribe
-
-	// Mqtt client - Subscribe to every topic in the config file, and bind with message handler
-	if token := bt.mqttClient.SubscribeMultiple(subscriptions, bt.onMessage); token.Wait() && token.Error() != nil {
-		panic(token.Error())
-	}
-
+	bt.connect(bt.mqttClient)
 	return bt, nil
 }
 
 // Mqtt message handler
 func (bt *Mqttbeat) onMessage(client MQTT.Client, msg MQTT.Message) {
-	logp.Info("MQTT MESSAGE RECEIVED " + string(msg.Payload()))
+	logp.Debug("mqttbeat", "MQTT MESSAGE RECEIVED %s", string(msg.Payload()))
 
 	event := make(common.MapStr) // common.MapStr = map[string]interface{}
 
@@ -87,8 +98,14 @@ func (bt *Mqttbeat) onMessage(client MQTT.Client, msg MQTT.Message) {
 	event["@timestamp"] = common.Time(time.Now())
 	event["topic"] = msg.Topic()
 	// Finally sending the message to elasticsearch
-	bt.elasticClient.PublishEvent(event)
-	logp.Info("Event sent")
+	published := bt.elasticClient.PublishEvent(event)
+	logp.Debug("mqttbeat", "Event sent: %t", published)
+}
+
+// DefaultConnectionLostHandler does nothing
+func (bt *Mqttbeat) reConnectHandler(client MQTT.Client, reason error) {
+	logp.Warn("Connection lost: %s", reason.Error())
+	bt.connect(client)
 }
 
 // Run is used to start this beater, once configured and connected
@@ -120,19 +137,19 @@ func DecodePayload(payload []byte) common.MapStr {
 	// A msgpack payload must be a json-like object
 	err := msgpack.Unmarshal(payload, &event)
 	if err == nil {
-		logp.Info("Payload decoded - msgpack")
+		logp.Debug("mqttbeat", "Payload decoded - msgpack")
 		return event
 	}
 
 	err = json.Unmarshal(payload, &event)
 	if err == nil {
-		logp.Info("Payload decoded - json")
+		logp.Debug("mqttbeat", "Payload decoded - json")
 		return event
 	}
 
 	// default case
 	event["payload"] = string(payload)
-	logp.Info("Payload decoded - text")
+	logp.Debug("mqttbeat", "decoded - text")
 	return event
 }
 
