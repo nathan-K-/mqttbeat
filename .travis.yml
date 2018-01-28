@@ -5,21 +5,22 @@ services:
 
 language: go
 
-go:
-  - master
-
-os:
-  - linux
- # - osx
-
 env:
   matrix:
-    #- TARGETS="check"
     - TARGETS="testsuite"
 
   global:
     # Cross-compile for amd64 only to speed up testing.
     - GOX_FLAGS="-arch amd64"
+
+go:
+  - 1.8
+
+os:
+  - linux
+ # - osx
+sudo:
+  - required
 
 addons:
   apt:
@@ -27,7 +28,8 @@ addons:
       - python-virtualenv
 
 before_install:
-  - pip install pyopenssl ndg-httpsclient pyasn1
+  - sudo pip install --upgrade "pip>=8,<9" #not a fix, but a workaround, see https://github.com/guysoft/OctoPi/issues/276
+  - sudo pip install pyopenssl pyasn1 ndg-httpsclient
   # Redo the travis setup but with the elastic/libbeat path. This is needed so the package path is correct
   - mkdir -p $HOME/gopath/src/github.com/nathan-k-/mqttbeat/
   - rsync -az ${TRAVIS_BUILD_DIR}/ $HOME/gopath/src/github.com/nathan-k-/mqttbeat/
@@ -39,8 +41,6 @@ install:
   - true
 
 script:
-  - make update-deps
-  - make
   - make $TARGETS
 
 after_success:
