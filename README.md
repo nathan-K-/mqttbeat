@@ -5,7 +5,6 @@
 Welcome to Mqttbeat.
 
 This beat will allow you to put MQTT messages in an elasticsearch instance.
-You can use [this little project](https://github.com/nathan-K-/stack-docker) to easily start an elastic stack.
 
 Ensure that this folder is at the following location:
 `${GOPATH}/github.com/nathan-k-/mqttbeat`
