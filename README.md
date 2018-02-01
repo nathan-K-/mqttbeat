@@ -1,5 +1,5 @@
 # Mqttbeat
-[![Build Status](https://travis-ci.org/nathan-K-/mqttbeat.svg?branch=master)](https://travis-ci.org/nathan-K-/mqttbeat)
+
 [![Go Report Card](https://goreportcard.com/badge/github.com/nathan-K-/mqttbeat)](https://goreportcard.com/report/github.com/nathan-K-/mqttbeat)
 
 Welcome to Mqttbeat.
@@ -105,8 +105,8 @@ make clean
 To clone Mqttbeat from the git repository, run the following commands:
 
 ```
-mkdir -p ${GOPATH}/github.com/nathan-k-/mqttbeat
-cd ${GOPATH}/github.com/nathan-k-/mqttbeat
+mkdir -p ${GOPATH}/github.com/nathan-k-/
+cd ${GOPATH}/github.com/nathan-k-/
 git clone https://github.com/nathan-k-/mqttbeat
 ```
 
