@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+    "math/rand"
+
 
 	"github.com/elastic/beats/libbeat/beat"
 	"github.com/elastic/beats/libbeat/common"
@@ -16,7 +18,7 @@ import (
 
 	"gopkg.in/vmihailenco/msgpack.v2"
 
-	"github.com/nathan-k-/mqttbeat/config"
+	"github.com/nathan-K-/mqttbeat/config"
 )
 
 // Mqttbeat represent a mqtt beat object
@@ -27,6 +29,17 @@ type Mqttbeat struct {
 	mqttClient    MQTT.Client
 }
 
+// Generate random client ID
+const charmap = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+func randClientId(n int) string {
+    b := make([]byte, n)
+    for i := range b {
+        b[i] = charmap[rand.Intn(len(charmap))]
+    }
+    return string(b)
+}
+
 // Prepare mqtt client
 func setupMqttClient(bt *Mqttbeat) {
 	mqttClientOpt := MQTT.NewClientOptions()
@@ -35,11 +48,19 @@ func setupMqttClient(bt *Mqttbeat) {
 	mqttClientOpt.SetConnectionLostHandler(bt.reConnectHandler)
 	mqttClientOpt.SetOnConnectHandler(bt.subscribeOnConnect)
 	
-	if bt.beatConfig.BrokerUsername != "" && bt.beatConfig.BrokerPassword != "" {
+	if bt.beatConfig.BrokerUsername != "" && bt.beatConfig.BrokerPassword != "" && bt.beatConfig.BrokerID != "" {
 		logp.Info("BROKER username: %s", bt.beatConfig.BrokerUsername)
+		logp.Info("BROKER client ID: %s", bt.beatConfig.BrokerID)
 		mqttClientOpt.SetUsername(bt.beatConfig.BrokerUsername)
 		mqttClientOpt.SetPassword(bt.beatConfig.BrokerPassword)
+		mqttClientOpt.SetClientID(bt.beatConfig.BrokerID)
 	}
+	if bt.beatConfig.BrokerID != "" {
+		mqttClientOpt.SetClientID(bt.beatConfig.BrokerID)
+	} else if bt.beatConfig.BrokerID == "" {
+		mqttClientOpt.SetClientID(randClientId(32))
+	}
+
 	bt.mqttClient = MQTT.NewClient(mqttClientOpt)
 }
 

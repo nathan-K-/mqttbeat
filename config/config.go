@@ -10,6 +10,7 @@ type Config struct {
 	BrokerURL       string        `config:"broker_url"`
 	BrokerUsername  string        `config:"broker_username"`
 	BrokerPassword  string        `config:"broker_password"`
+	BrokerID        string        `config:"broker_id"`
 	TopicsSubscribe []string      `config:"topics_subscribe"`
 	DecodePaylod    bool          `config:"decode_payload"`
 	Period          time.Duration `config:"period"`
@@ -20,6 +21,7 @@ var DefaultConfig = Config{
 	BrokerURL:       "tcp://localhost:1883",
 	BrokerUsername:	 "",
 	BrokerPassword:	 "",
+	BrokerID:        "",
 	TopicsSubscribe: []string{"/test/mqttbeat/#?1"},
 	DecodePaylod:    true,
 }
