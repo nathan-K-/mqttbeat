@@ -1,5 +1,5 @@
 BEAT_NAME=mqttbeat
-BEAT_PATH=github.com/nathan-k-/mqttbeat
+BEAT_PATH=github.com/nathan-K-/mqttbeat
 BEAT_GOPATH=$(firstword $(subst :, ,${GOPATH}))
 BEAT_URL=https://${BEAT_PATH}
 SYSTEM_TESTS=false

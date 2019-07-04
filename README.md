@@ -7,7 +7,7 @@ Welcome to Mqttbeat.
 This beat will allow you to put MQTT messages in an elasticsearch instance.
 
 Ensure that this folder is at the following location:
-`${GOPATH}/github.com/nathan-k-/mqttbeat`
+`${GOPATH}/github.com/nathan-K-/mqttbeat`
 
 ## Getting Started with Mqttbeat
 
@@ -30,7 +30,7 @@ It will create a clean git history for each major step. Note that you can always
 To push Mqttbeat in the git repository, run the following commands:
 
 ```
-git remote set-url origin https://github.com/nathan-k-/mqttbeat
+git remote set-url origin https://github.com/nathan-K-/mqttbeat
 git push origin master
 ```
 
@@ -105,9 +105,9 @@ make clean
 To clone Mqttbeat from the git repository, run the following commands:
 
 ```
-mkdir -p ${GOPATH}/github.com/nathan-k-/
-cd ${GOPATH}/github.com/nathan-k-/
-git clone https://github.com/nathan-k-/mqttbeat
+mkdir -p ${GOPATH}/github.com/nathan-K-/
+cd ${GOPATH}/github.com/nathan-K-/
+git clone https://github.com/nathan-K-/mqttbeat
 ```
 
 
