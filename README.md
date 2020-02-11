@@ -9,6 +9,11 @@ This beat will allow you to put MQTT messages in an elasticsearch instance.
 Ensure that this folder is at the following location:
 `${GOPATH}/github.com/nathan-k-/mqttbeat`
 
+## Support
+
+Hello, this project is no longer under work. Feel free to fork it, adapt it to your need, and improve it !
+Cheers,
+
 ## Getting Started with Mqttbeat
 
 ### Requirements
