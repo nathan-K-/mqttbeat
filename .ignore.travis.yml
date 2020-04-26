@@ -31,10 +31,10 @@ before_install:
   - sudo pip install --upgrade "pip>=8,<9" #not a fix, but a workaround, see https://github.com/guysoft/OctoPi/issues/276
   - sudo pip install pyopenssl pyasn1 ndg-httpsclient
   # Redo the travis setup but with the elastic/libbeat path. This is needed so the package path is correct
-  - mkdir -p $HOME/gopath/src/github.com/nathan-k-/mqttbeat/
-  - rsync -az ${TRAVIS_BUILD_DIR}/ $HOME/gopath/src/github.com/nathan-k-/mqttbeat/
-  - export TRAVIS_BUILD_DIR=$HOME/gopath/src/github.com/nathan-k-/mqttbeat/
-  - cd $HOME/gopath/src/github.com/nathan-k-/mqttbeat/
+  - mkdir -p $HOME/gopath/src/github.com/nathan-K-/mqttbeat/
+  - rsync -az ${TRAVIS_BUILD_DIR}/ $HOME/gopath/src/github.com/nathan-K-/mqttbeat/
+  - export TRAVIS_BUILD_DIR=$HOME/gopath/src/github.com/nathan-K-/mqttbeat/
+  - cd $HOME/gopath/src/github.com/nathan-K-/mqttbeat/
   - go get github.com/Masterminds/glide
 
 install:

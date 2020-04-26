@@ -8,6 +8,8 @@ mqttbeat:
   # MQTT broker username and password
   broker_username: ""
   broker_password: "" 
+  # MQTT client ID is optional (if empty, a random string will be used)
+  broker_id: ""
   # Try to decode the payload ? Support msgpack and json
   decode_payload: true
   # List of string?int, representing a topic and the associated QoS
